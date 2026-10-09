@@ -1,0 +1,13 @@
+{
+  "_about": "Playlist (*.playlist.json) fields. Source: https://projectreclaimer.dev/host 'Playlist file reference'.",
+  "version": 2,
+  "header": [
+    { "key": "name", "label": "Playlist name", "type": "string", "maxLength": 48, "required": true, "help": "Shown in the lobby." },
+    { "key": "vote_seconds", "label": "Vote time", "type": "int", "min": 5, "max": 120, "default": 20, "slider": true, "unit": " s", "help": "How long each ballot stays open." }
+  ],
+  "entry": [
+    { "key": "name", "label": "Entry name", "group": "Entry", "type": "string", "maxLength": 48, "default": "", "help": "The name players see for this game." },
+    { "key": "weight", "label": "Weight", "group": "Entry", "type": "int", "min": 1, "max": 100, "default": 1, "slider": true, "help": "How often ballots offer this game compared with the others." },
+    { "key": "anti_cheat", "label": "Disable anti-cheat for this game", "group": "Entry", "type": "const", "value": false, "help": "For maps or game types with unusual physics or scripts. An entry can only turn anti-cheat off." }
+  ]
+}

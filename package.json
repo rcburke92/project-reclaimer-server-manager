@@ -1,0 +1,57 @@
+{
+  "name": "halo3-server-manager",
+  "productName": "Halo 3 Server Manager",
+  "version": "0.1.0",
+  "description": "Build game types, playlists and server config for a Project Reclaimer Halo 3 dedicated server.",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/run-electron.js",
+    "test": "node --test \"test/*.test.js\" \"test/*.test.mjs\"",
+    "dist": "electron-builder --win portable --x64",
+    "smoke": "node scripts/run-electron.js --smoke",
+    "icon": "node -e \"const{spawn}=require('child_process');const e=require('electron');const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;spawn(e,['scripts/make-icon.js'],{env,stdio:'inherit'}).on('exit',c=>process.exit(c))\""
+  },
+  "author": "Ryan Burke",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "smol-toml": "^1.9.0"
+  },
+  "build": {
+    "appId": "com.halo3servermanager.app",
+    "productName": "Halo 3 Server Manager",
+    "directories": {
+      "output": "out",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json",
+      "!src/**/*.test.*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "portable": {
+      "artifactName": "Halo3ServerManager-${version}.exe"
+    },
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
+    "afterPack": "scripts/after-pack.js"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "_about": "Halo 3 stock multiplayer maps. file = the .map name in halo3/maps (also accepted by the server); name = the title shown in game and used in playlists/dedicated.toml. Source: MCC install (halo3/maps) and https://projectreclaimer.dev/host. preview = the image name in MCC's Data/ui/texturepacks/levelstexturepack (decoded by src/main/mcc-textures.js).",
+  "maps": [
+    { "file": "construct",      "name": "Construct",    "pack": "Launch",    "preview": "H3MP_CONSTRUCT" },
+    { "file": "salvation",      "name": "Epitaph",      "pack": "Launch",    "preview": "H3MP_EPITAPH" },
+    { "file": "guardian",       "name": "Guardian",     "pack": "Launch",    "preview": "H3MP_GUARDIAN" },
+    { "file": "deadlock",       "name": "High Ground",  "pack": "Launch",    "preview": "H3MP_HIGHGROUND" },
+    { "file": "isolation",      "name": "Isolation",    "pack": "Launch",    "preview": "H3MP_ISOLATION" },
+    { "file": "zanzibar",       "name": "Last Resort",  "pack": "Launch",    "preview": "H3MP_LASTRESORT" },
+    { "file": "chill",          "name": "Narrows",      "pack": "Launch",    "preview": "H3MP_NARROWS" },
+    { "file": "shrine",         "name": "Sandtrap",     "pack": "Launch",    "preview": "H3MP_SANDTRAP" },
+    { "file": "snowbound",      "name": "Snowbound",    "pack": "Launch",    "preview": "H3MP_SNOWBOUND" },
+    { "file": "cyberdyne",      "name": "The Pit",      "pack": "Launch",    "preview": "H3MP_THEPIT" },
+    { "file": "riverworld",     "name": "Valhalla",     "pack": "Launch",    "preview": "H3MP_VALHALLA" },
+    { "file": "warehouse",      "name": "Foundry",      "pack": "Heroic",    "preview": "H3MP_FOUNDRY" },
+    { "file": "armory",         "name": "Rat's Nest",   "pack": "Heroic",    "preview": "H3MP_RATSNEST" },
+    { "file": "bunkerworld",    "name": "Standoff",     "pack": "Heroic",    "preview": "H3MP_STANDOFF" },
+    { "file": "chillout",       "name": "Cold Storage", "pack": "Heroic",    "preview": "H3MP_COLDSTORAGE" },
+    { "file": "sidewinder",     "name": "Avalanche",    "pack": "Legendary", "preview": "H3MP_AVALANCHE" },
+    { "file": "lockout",        "name": "Blackout",     "pack": "Legendary", "preview": "H3MP_BLACKOUT" },
+    { "file": "ghosttown",      "name": "Ghost Town",   "pack": "Legendary", "preview": "H3MP_GHOSTTOWN" },
+    { "file": "descent",        "name": "Assembly",     "pack": "Mythic",    "preview": "H3MP_ASSEMBLY" },
+    { "file": "spacecamp",      "name": "Orbital",      "pack": "Mythic",    "preview": "H3MP_ORBITAL" },
+    { "file": "sandbox",        "name": "Sandbox",      "pack": "Mythic",    "preview": "H3MP_SANDBOX" },
+    { "file": "fortress",       "name": "Citadel",      "pack": "Mythic II", "preview": "H3MP_CITADEL" },
+    { "file": "midship",        "name": "Heretic",      "pack": "Mythic II", "preview": "H3MP_HERETIC" },
+    { "file": "docks",          "name": "Longshore",    "pack": "Mythic II", "preview": "H3MP_LONGSHORE" },
+    { "file": "s3d_edge",       "name": "Edge",         "pack": "MCC",       "preview": "H3MP_S3D_EDGE" },
+    { "file": "s3d_turf",       "name": "Icebox",       "pack": "MCC",       "preview": "H3MP_S3D_ICEBOX" },
+    { "file": "s3d_waterfall",  "name": "Waterfall",    "pack": "MCC",       "preview": "H3MP_S3D_WATERFALL" }
+  ]
+}

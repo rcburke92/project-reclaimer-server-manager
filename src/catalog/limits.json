@@ -1,0 +1,13 @@
+{
+  "_about": "Hard limits enforced by the server. Source: https://projectreclaimer.dev/host.",
+  "playlist": {
+    "minGames": 3,
+    "maxGames": 128,
+    "maxModMaps": 23,
+    "maxMods": 16,
+    "voteSeconds": [5, 120],
+    "weight": [1, 100]
+  },
+  "gametype": { "nameMax": 48 },
+  "server": { "nameMax": 48, "portRange": [1024, 65535], "maxPlayers": [1, 63], "maxWorkshopItems": 64, "rconPassword": [8, 128] }
+}

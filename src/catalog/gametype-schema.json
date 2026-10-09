@@ -1,0 +1,744 @@
+{
+  "_about": "Game type (.json) and playlist rules/options. Sources: the Project Reclaimer docs (projectreclaimer.dev: game modes, host/playlist reference, Megalo trait values) and the five bundled modes in Documents/My Games/Project Reclaimer/Game Modes. Option values are the numbers the client writes; 'verified: false' marks labels inferred rather than documented. Run 'dedicated check' (Export tab) to confirm. Starting weapons: the exact list the dedicated server prints for an unknown choice (Project Reclaimer 0.9.4), numbered from -3 in that order; matches Magnum 7, Rocket launcher 10, Shotgun 11, Spartan laser 16 and No weapon 17 seen in real variants.",
+  "_baseModes": "value = the name playlists and dedicated.toml use; json = what a game type file's \"mode\" must hold (from mode-check: CaptureTheFlag, Slayer, Forge, Oddball, KingOfTheHill, Vip, Juggernaut, Territories, Assault, Infection, EscalationSlayer).",
+  "baseModes": [
+    {
+      "value": "Slayer",
+      "label": "Slayer",
+      "scriptable": true,
+      "json": "Slayer"
+    },
+    {
+      "value": "Capture the Flag",
+      "label": "Capture the Flag",
+      "json": "CaptureTheFlag"
+    },
+    {
+      "value": "Oddball",
+      "label": "Oddball",
+      "json": "Oddball"
+    },
+    {
+      "value": "King of the Hill",
+      "label": "King of the Hill",
+      "json": "KingOfTheHill"
+    },
+    {
+      "value": "Juggernaut",
+      "label": "Juggernaut",
+      "json": "Juggernaut"
+    },
+    {
+      "value": "Territories",
+      "label": "Territories",
+      "json": "Territories"
+    },
+    {
+      "value": "Assault",
+      "label": "Assault",
+      "json": "Assault"
+    },
+    {
+      "value": "Infection",
+      "label": "Infection",
+      "json": "Infection"
+    },
+    {
+      "value": "VIP",
+      "label": "VIP",
+      "json": "Vip"
+    }
+  ],
+  "bundledModes": [
+    "Gun Game",
+    "Growth",
+    "One in the Chamber",
+    "Zone Control",
+    "Flood Infection"
+  ],
+  "rules": [
+    {
+      "key": "score_to_win",
+      "label": "Score to win",
+      "group": "Scoring",
+      "type": "int",
+      "min": 0,
+      "max": 999,
+      "default": 25,
+      "help": "Points that win a round. 0 = no limit (the time limit ends the round)."
+    },
+    {
+      "key": "kill_points",
+      "label": "Kill points",
+      "group": "Scoring",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "default": 1,
+      "help": "Points for a kill, on top of any a script gives."
+    },
+    {
+      "key": "death_points",
+      "label": "Death points",
+      "group": "Scoring",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "default": 0,
+      "help": "Points for dying, usually 0 or negative."
+    },
+    {
+      "key": "suicide_points",
+      "label": "Suicide points",
+      "group": "Scoring",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "default": -1,
+      "help": "Points for killing yourself, usually 0 or negative."
+    },
+    {
+      "key": "betrayal_points",
+      "label": "Betrayal points",
+      "group": "Scoring",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "default": -1,
+      "help": "Points for killing a teammate, usually 0 or negative."
+    }
+  ],
+  "options": [
+    {
+      "key": "rounds.teams",
+      "label": "Teams",
+      "group": "Rounds",
+      "type": "enum",
+      "default": 1,
+      "verified": true,
+      "values": [
+        { "value": 0, "label": "Free for all" },
+        { "value": 1, "label": "Teams" }
+      ]
+    },
+    {
+      "key": "rounds.limit",
+      "label": "Number of rounds",
+      "group": "Rounds",
+      "type": "int",
+      "min": 1,
+      "max": 15,
+      "default": 1,
+      "help": "Scores reset each round; the total decides the winner."
+    },
+    {
+      "key": "rounds.minutes",
+      "label": "Time limit",
+      "group": "Rounds",
+      "type": "int",
+      "min": 0,
+      "max": 100,
+      "default": 10,
+      "unit": " min",
+      "help": "Minutes per round. 0 = no time limit."
+    },
+    {
+      "key": "rounds.reset_players",
+      "label": "Reset players each round",
+      "group": "Rounds",
+      "type": "enum",
+      "default": 1,
+      "verified": false,
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ]
+    },
+    {
+      "key": "rounds.early_victory",
+      "label": "Early victory win count",
+      "group": "Rounds",
+      "type": "int",
+      "min": 0,
+      "max": 15,
+      "default": 0,
+      "verified": false,
+      "help": "Round wins that end the game early. 0 = off."
+    },
+    {
+      "key": "respawn.lives",
+      "label": "Lives per round",
+      "group": "Respawn",
+      "type": "int",
+      "min": 0,
+      "max": 50,
+      "default": 0,
+      "help": "0 = unlimited."
+    },
+    {
+      "key": "map.weapons",
+      "label": "Weapons on map",
+      "group": "Map",
+      "type": "enum",
+      "default": 0,
+      "verified": true,
+      "values": [
+        { "value": 0, "label": "Map default" },
+        { "value": 11, "label": "None" }
+      ],
+      "help": "Only the documented choices are listed. Other weapon sets: set them in the client's Game Options and import the saved variant."
+    },
+    {
+      "key": "map.vehicles",
+      "label": "Vehicles on map",
+      "group": "Map",
+      "type": "enum",
+      "default": 0,
+      "verified": true,
+      "values": [
+        { "value": 0, "label": "Map default" },
+        { "value": 1, "label": "None" }
+      ],
+      "help": "Only the documented choices are listed. Other vehicle sets: set them in the client's Game Options and import the saved variant."
+    },
+    {
+      "key": "player.primary_weapon",
+      "label": "Primary weapon",
+      "group": "Player",
+      "type": "enum",
+      "default": 0,
+      "values": "$startingWeapons",
+      "playlistFormat": "label"
+    },
+    {
+      "key": "player.secondary_weapon",
+      "label": "Secondary weapon",
+      "group": "Player",
+      "type": "enum",
+      "default": -1,
+      "values": "$startingWeapons",
+      "playlistFormat": "label"
+    },
+    {
+      "key": "player.grenades",
+      "label": "Starting grenades",
+      "group": "Player",
+      "type": "enum",
+      "default": 1,
+      "verified": true,
+      "values": [
+        { "value": 1, "label": "Map default" },
+        { "value": 2, "label": "None" }
+      ]
+    },
+    {
+      "key": "player.ammo",
+      "label": "Ammo",
+      "group": "Player",
+      "type": "enum",
+      "default": 1,
+      "verified": true,
+      "values": [
+        { "value": 1, "label": "Normal" },
+        { "value": 2, "label": "Infinite" },
+        { "value": 3, "label": "Bottomless clip" }
+      ]
+    },
+    {
+      "key": "player.pickup",
+      "label": "Weapon pickup",
+      "group": "Player",
+      "type": "enum",
+      "default": 1,
+      "verified": true,
+      "values": [
+        { "value": 1, "label": "Allowed" },
+        { "value": 2, "label": "Disabled" }
+      ]
+    },
+    {
+      "key": "player.shields",
+      "label": "Shields",
+      "group": "Player",
+      "type": "enum",
+      "default": 2,
+      "verified": true,
+      "values": [
+        { "value": 1, "label": "No shields" },
+        { "value": 2, "label": "Normal shields" },
+        { "value": 3, "label": "2x overshields" },
+        { "value": 4, "label": "3x overshields" },
+        { "value": 5, "label": "4x overshields" }
+      ]
+    }
+  ],
+  "startingWeapons": [
+    { "value": -3, "label": "Random" },
+    { "value": -2, "label": "Unchanged" },
+    { "value": -1, "label": "Map default" },
+    { "value": 0, "label": "Battle rifle" },
+    { "value": 1, "label": "Assault rifle" },
+    { "value": 2, "label": "Plasma pistol" },
+    { "value": 3, "label": "Spiker" },
+    { "value": 4, "label": "SMG" },
+    { "value": 5, "label": "Carbine" },
+    { "value": 6, "label": "Energy sword" },
+    { "value": 7, "label": "Magnum" },
+    { "value": 8, "label": "Needler" },
+    { "value": 9, "label": "Plasma rifle" },
+    { "value": 10, "label": "Rocket launcher" },
+    { "value": 11, "label": "Shotgun" },
+    { "value": 12, "label": "Sniper rifle" },
+    { "value": 13, "label": "Brute shot" },
+    { "value": 14, "label": "Unarmed" },
+    { "value": 15, "label": "Beam rifle" },
+    { "value": 16, "label": "Spartan laser" },
+    { "value": 17, "label": "No weapon" },
+    { "value": 18, "label": "Gravity hammer" },
+    { "value": 19, "label": "Mauler" },
+    { "value": 20, "label": "Flamethrower" },
+    { "value": 21, "label": "Missile pod" },
+    { "value": 22, "label": "Sentinel beam" },
+    { "value": 23, "label": "Fuel rod gun" },
+    { "value": 24, "label": "Silenced SMG" },
+    { "value": 25, "label": "Automag" },
+    { "value": 26, "label": "Brute plasma rifle" },
+    { "value": 27, "label": "Machine gun turret" },
+    { "value": 28, "label": "Plasma turret" },
+    { "value": 29, "label": "Golf club" }
+  ],
+  "scriptWeapons": [
+    {
+      "value": "assault_rifle",
+      "label": "Assault Rifle"
+    },
+    {
+      "value": "battle_rifle",
+      "label": "Battle Rifle"
+    },
+    {
+      "value": "smg",
+      "label": "SMG"
+    },
+    {
+      "value": "carbine",
+      "label": "Carbine"
+    },
+    {
+      "value": "magnum",
+      "label": "Magnum"
+    },
+    {
+      "value": "plasma_pistol",
+      "label": "Plasma Pistol"
+    },
+    {
+      "value": "plasma_rifle",
+      "label": "Plasma Rifle"
+    },
+    {
+      "value": "spiker",
+      "label": "Spiker"
+    },
+    {
+      "value": "needler",
+      "label": "Needler"
+    },
+    {
+      "value": "shotgun",
+      "label": "Shotgun"
+    },
+    {
+      "value": "sniper_rifle",
+      "label": "Sniper Rifle"
+    },
+    {
+      "value": "beam_rifle",
+      "label": "Beam Rifle"
+    },
+    {
+      "value": "rocket_launcher",
+      "label": "Rocket Launcher"
+    },
+    {
+      "value": "spartan_laser",
+      "label": "Spartan Laser"
+    },
+    {
+      "value": "brute_shot",
+      "label": "Brute Shot"
+    },
+    {
+      "value": "mauler",
+      "label": "Mauler"
+    },
+    {
+      "value": "energy_sword",
+      "label": "Energy Sword"
+    },
+    {
+      "value": "gravity_hammer",
+      "label": "Gravity Hammer"
+    },
+    {
+      "value": "sentinel_beam",
+      "label": "Sentinel Beam"
+    },
+    {
+      "value": "fuel_rod_gun",
+      "label": "Fuel Rod Gun"
+    },
+    {
+      "value": "flamethrower",
+      "label": "Flamethrower"
+    },
+    {
+      "value": "missile_pod",
+      "label": "Missile Pod"
+    },
+    {
+      "value": "machine_gun_turret",
+      "label": "Machine Gun Turret"
+    },
+    {
+      "value": "plasma_cannon",
+      "label": "Plasma Cannon"
+    }
+  ],
+  "traits": [
+    {
+      "key": "resistance",
+      "label": "Damage resistance",
+      "values": [
+        "10%",
+        "50%",
+        "90%",
+        "100%",
+        "110%",
+        "150%",
+        "200%",
+        "300%",
+        "500%",
+        "1000%",
+        "2000%",
+        "Invulnerable"
+      ]
+    },
+    {
+      "key": "recharge",
+      "label": "Shield recharge",
+      "values": [
+        "-25%",
+        "-10%",
+        "-5%",
+        "Disabled",
+        "50%",
+        "90%",
+        "100%",
+        "110%",
+        "200%"
+      ]
+    },
+    {
+      "key": "vampirism",
+      "label": "Shield vampirism",
+      "values": [
+        "Off",
+        "10%",
+        "25%",
+        "50%",
+        "100%"
+      ]
+    },
+    {
+      "key": "headshots",
+      "label": "Headshots",
+      "values": [
+        "Immune",
+        "Vulnerable"
+      ]
+    },
+    {
+      "key": "shields",
+      "label": "Shields",
+      "values": [
+        "None",
+        "Normal",
+        "2x",
+        "3x",
+        "4x"
+      ]
+    },
+    {
+      "key": "damage",
+      "label": "Damage",
+      "values": [
+        "0%",
+        "25%",
+        "50%",
+        "75%",
+        "90%",
+        "100%",
+        "110%",
+        "125%",
+        "150%",
+        "200%",
+        "300%",
+        "Instant kill"
+      ]
+    },
+    {
+      "key": "grenade_regeneration",
+      "label": "Grenade regeneration",
+      "values": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "key": "ammo",
+      "label": "Ammo",
+      "values": [
+        "Normal",
+        "Infinite",
+        "Bottomless clip"
+      ]
+    },
+    {
+      "key": "pickup",
+      "label": "Weapon pickup",
+      "values": [
+        "Allowed",
+        "Disabled"
+      ]
+    },
+    {
+      "key": "speed",
+      "label": "Movement speed",
+      "values": [
+        "25%",
+        "50%",
+        "75%",
+        "90%",
+        "100%",
+        "110%",
+        "125%",
+        "150%",
+        "200%",
+        "300%"
+      ]
+    },
+    {
+      "key": "gravity",
+      "label": "Gravity",
+      "values": [
+        "50%",
+        "75%",
+        "100%",
+        "150%",
+        "200%"
+      ]
+    },
+    {
+      "key": "vehicles",
+      "label": "Vehicle use",
+      "values": [
+        "None",
+        "Passenger only",
+        "Full use"
+      ]
+    },
+    {
+      "key": "camouflage",
+      "label": "Active camo",
+      "values": [
+        "Off",
+        "Poor",
+        "Good",
+        "Invisible"
+      ]
+    },
+    {
+      "key": "waypoint",
+      "label": "Waypoint",
+      "values": [
+        "Off",
+        "Allies",
+        "Everyone"
+      ]
+    },
+    {
+      "key": "aura",
+      "label": "Aura",
+      "values": [
+        "Off",
+        "Team color",
+        "Black",
+        "White"
+      ]
+    },
+    {
+      "key": "radar",
+      "label": "Motion tracker",
+      "values": [
+        "Off",
+        "Moving players",
+        "All players",
+        "Allies"
+      ]
+    },
+    {
+      "key": "radar_range",
+      "label": "Tracker range",
+      "values": [
+        "10 m",
+        "15 m",
+        "25 m",
+        "50 m",
+        "75 m",
+        "100 m",
+        "150 m"
+      ]
+    }
+  ],
+  "script": {
+    "events": [
+      {
+        "value": "on_spawn",
+        "label": "When a player spawns"
+      },
+      {
+        "value": "on_kill",
+        "label": "When a player kills an enemy"
+      },
+      {
+        "value": "on_death",
+        "label": "When a player dies"
+      }
+    ],
+    "conditions": [
+      {
+        "value": "always",
+        "label": "Always",
+        "when": null
+      },
+      {
+        "value": "not_melee",
+        "label": "Only if the kill wasn't a melee strike",
+        "when": [
+          "kill.melee",
+          0,
+          "=="
+        ],
+        "events": [
+          "on_kill",
+          "on_death"
+        ]
+      },
+      {
+        "value": "melee",
+        "label": "Only melee-strike kills",
+        "when": [
+          "kill.melee"
+        ],
+        "events": [
+          "on_kill",
+          "on_death"
+        ]
+      },
+      {
+        "value": "assassination",
+        "label": "Only kills from behind",
+        "when": [
+          "kill.assassination"
+        ],
+        "events": [
+          "on_kill",
+          "on_death"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "op": "scale",
+        "label": "Set player size",
+        "field": "value",
+        "type": "number",
+        "min": 0.1,
+        "max": 3,
+        "step": 0.05,
+        "default": 1,
+        "unit": "x"
+      },
+      {
+        "op": "health",
+        "label": "Set player health",
+        "field": "value",
+        "type": "number",
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1,
+        "default": 1,
+        "unit": "x"
+      },
+      {
+        "op": "damage",
+        "label": "Set player damage",
+        "field": "value",
+        "type": "number",
+        "min": 0.1,
+        "max": 3,
+        "step": 0.05,
+        "default": 1,
+        "unit": "x"
+      },
+      {
+        "op": "weapon",
+        "label": "Give weapon",
+        "field": "weapon",
+        "type": "weapon"
+      },
+      {
+        "op": "ammo",
+        "label": "Set ammo",
+        "field": "value",
+        "type": "int",
+        "min": 0,
+        "max": 999,
+        "default": 1
+      },
+      {
+        "op": "add_ammo",
+        "label": "Add ammo",
+        "field": "value",
+        "type": "int",
+        "min": 0,
+        "max": 999,
+        "default": 1
+      },
+      {
+        "op": "lethal",
+        "label": "One-hit kills",
+        "field": "enabled",
+        "type": "bool",
+        "default": true
+      },
+      {
+        "op": "score",
+        "label": "Give points",
+        "field": "value",
+        "type": "int",
+        "min": -100,
+        "max": 100,
+        "default": 1
+      },
+      {
+        "op": "traits",
+        "label": "Set player traits",
+        "field": "values",
+        "type": "traits",
+        "version": 2
+      }
+    ]
+  }
+}
