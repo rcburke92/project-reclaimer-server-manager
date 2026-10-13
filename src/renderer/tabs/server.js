@@ -1,5 +1,6 @@
-// Server tab: dedicated.toml as forms. Every setting is a toggle row: on writes
-// the key, off leaves it out so the server's default (or [defaults]) applies.
+// Server tab: dedicated.toml as forms, and the Pterodactyl egg's
+// reserved-slots.toml in a second document. Every setting is a toggle row: on
+// writes the key, off leaves it out so the default (or [defaults]) applies.
 import { h, render, clone } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
 import { catalog } from '../lib/catalog.js';
@@ -10,8 +11,10 @@ import { events } from '../lib/events.js';
 import { createDocumentHost } from '../components/document-host.js';
 import { loadMapSources, allMaps } from '../lib/maps.js';
 import { loadGametypeRefs, gametypeChoices } from '../lib/gametype-refs.js';
+import { validateReservedSlots, firstServerMaxPlayers } from '../lib/reserved-slots.js';
 
 const S = catalog.server;
+const RS = catalog.reservedSlots;
 const LIM = catalog.limits.server;
 const SERVER_REQUIRED = ['name', 'port'];
 const PLAYS = [
@@ -24,6 +27,8 @@ const PLAYS = [
 let pane;
 let host = null;
 let fileInfo = null;
+let reservedInfo = null;
+let updateReservedSummary = null;
 let playlists = [];
 let gametypes = [];
 const bodyHost = h('div.server-body');
@@ -252,7 +257,29 @@ function createEditor(doc, docHost) {
   return root;
 }
 
+// ---------------------------------------------------------------- reserved-slots.toml
+
+function createReservedEditor(doc, docHost) {
+  const data = doc.current;
+  const summary = h('span');
+  updateReservedSummary = () => {
+    const dedicated = host?.find('dedicated')?.current;
+    const max = firstServerMaxPlayers(dedicated);
+    const slots = data.slots ?? 0;
+    summary.textContent = slots > 0
+      ? `${dedicated?.server?.[0]?.name || 'First server'}: ${Math.max(0, max - slots)} public + ${slots} reserved = ${max} max players`
+      : 'Off';
+  };
+  updateReservedSummary();
+  const onChange = () => { updateReservedSummary(); docHost.changed(doc); };
+  return h('div.editor',
+    h('div.readonly-banner', icon('info'),
+      h('span', 'For the Pterodactyl egg, which keeps these slots free over RCON on the first [[server]]. Raise that server\'s max players by the number of reserved slots. Egg variables filled in on the panel (Reserved Slots, Reserved Password, Reserved Bumping, Bump Order) override this file, and Reserved Whitelist adds to it.')),
+    sectionCard('Reserved slots', toggleRows(RS.fields, data, onChange), { open: true, note: summary }));
+}
+
 // ---------------------------------------------------------------- tab
+
 
 async function load() {
   await Promise.all([loadMapSources(), loadGametypeRefs()]);
@@ -262,7 +289,8 @@ async function load() {
       window.api.workspace.list('gametypes').then((l) => l.filter((g) => !g.readOnly)),
     ]);
   } catch { playlists = []; gametypes = []; }
-  fileInfo = await window.api.server.read();
+  [fileInfo, reservedInfo] = await Promise.all([window.api.server.read(), window.api.reservedSlots.read()]);
+  if (reservedInfo.error) toast.error(reservedInfo.error);
   draw();
 }
 
@@ -289,17 +317,33 @@ function draw() {
   if (!host) {
     host = createDocumentHost({
       emptyText: '',
-      createEditor,
-      validate: validateServerConfig,
-      save: async (doc) => { fileInfo = await window.api.server.write(doc.current); return 'dedicated'; },
-      onChange: () => events.emit('status'),
+      createEditor: (doc, docHost) => (doc.id === 'reserved' ? createReservedEditor(doc, docHost) : createEditor(doc, docHost)),
+      validate: (data, doc) => (doc.id === 'reserved' ? validateReservedSlots(data, host.find('dedicated')?.current) : validateServerConfig(data)),
+      save: async (doc) => {
+        if (doc.id === 'reserved') { reservedInfo = await window.api.reservedSlots.write(doc.current); return 'reserved'; }
+        fileInfo = await window.api.server.write(doc.current);
+        return 'dedicated';
+      },
+      onChange: () => { updateReservedSummary?.(); events.emit('status'); },
     });
-    host.open({ id: 'dedicated', title: 'dedicated.toml', data: fileInfo.data });
   } else {
-    const doc = host.find('dedicated');
-    if (doc && !host.dirtyDocs().length) { doc.saved = clone(fileInfo.data); doc.current = clone(fileInfo.data); host.rebuild(doc); }
+    // Pick up changes made outside the app, in documents without unsaved edits.
+    const dirty = host.dirtyDocs();
+    for (const [id, data] of [['dedicated', fileInfo.data], ['reserved', reservedInfo?.data]]) {
+      const doc = host.find(id);
+      if (doc && data && !dirty.includes(doc)) { doc.saved = clone(data); doc.current = clone(data); host.rebuild(doc); }
+    }
   }
+  openDocs();
   render(bodyHost, toolbar, host.el);
+}
+
+/** Opens both documents (again, if one was closed), keeping the active one in front. */
+function openDocs() {
+  const activeId = host.active()?.id;
+  if (!host.find('dedicated')) host.open({ id: 'dedicated', title: 'dedicated.toml', data: fileInfo.data });
+  if (!host.find('reserved') && reservedInfo?.data) host.open({ id: 'reserved', title: 'reserved-slots.toml', data: reservedInfo.data });
+  host.open({ id: activeId || 'dedicated' });
 }
 
 async function importFile() {

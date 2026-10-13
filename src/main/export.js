@@ -16,8 +16,10 @@ const mods = require('./mods');
 const { parseToml } = require('./toml-patch');
 
 const UPLOAD_DIRS = ['playlists', path.join('content', 'Game Modes'), path.join('content', 'Maps')];
-const UPLOAD_FILES = ['dedicated.toml', path.join('content', 'disabled-mods.json')];
+const UPLOAD_FILES = ['dedicated.toml', 'reserved-slots.toml', path.join('content', 'disabled-mods.json')];
 const WORKSHOP_RE = /^workshop:(\d+)\//i;
+// A game type name or file for the bundled Flood Infection mode or a copy of it.
+const FLOOD_RE = /flood[-_ ]?infection/i;
 
 function manifestFile() {
   return path.join(app.getPath('userData'), 'export-manifest.json');
@@ -66,22 +68,34 @@ function referencedMods() {
     refs.get(m[1]).add(by);
   };
   const warnings = [];
+  const flood = new Set(); // what plays Flood Infection
+  const addFlood = (game, by) => { if (FLOOD_RE.test(String(game || ''))) flood.add(by); };
 
   for (const item of workspace.list('playlists')) {
     if (item.error) { warnings.push(`Playlist ${item.file}: ${item.error}`); continue; }
     const data = workspace.readJson(path.join(root, 'playlists', item.file));
-    for (const g of data.games || []) { add(g.map, `Playlist "${item.name}"`); add(g.base_map, `Playlist "${item.name}"`); }
+    for (const g of data.games || []) {
+      add(g.map, `Playlist "${item.name}"`); add(g.base_map, `Playlist "${item.name}"`);
+      addFlood(g.game, `Playlist "${item.name}"`);
+    }
   }
   const tomlFile = path.join(root, 'dedicated.toml');
   if (fs.existsSync(tomlFile)) {
     try {
       const t = parseToml(fs.readFileSync(tomlFile, 'utf8'));
-      for (const s of t.server || []) { add(s.map, `Server "${s.name}"`); add(s.base_map, `Server "${s.name}"`); }
+      for (const s of t.server || []) {
+        add(s.map, `Server "${s.name}"`); add(s.base_map, `Server "${s.name}"`);
+        addFlood(s.game, `Server "${s.name}"`);
+      }
       for (const id of t.workshop?.items || []) add(`workshop:${id}/`, '[workshop] items');
     } catch (err) {
       warnings.push(`dedicated.toml: ${err.message}`);
     }
   }
+  // Flood Infection loads its Flood bodies from a campaign map that dedicated init
+  // doesn't copy and dedicated check doesn't ask for. Without it the game fails to
+  // load and the vote starts over.
+  if (flood.size) warnings.push(`${[...flood].join(', ')} ${flood.size > 1 ? 'play' : 'plays'} Flood Infection, which needs 050_floodvoi.map in the server's game/halo3/maps (copy it from MCC's halo3\\maps). dedicated init doesn't copy it and dedicated check doesn't ask for it: without it, the game fails to load and the vote starts over.`);
   return { refs, warnings };
 }
 

@@ -1,0 +1,16 @@
+{
+  "_about": "reserved-slots.toml, read by the Pterodactyl egg's reclaimer-reserved-slots.py (not by Project Reclaimer itself). The egg's Reserved … variables override these keys when they aren't empty. Types follow src/renderer/lib/settings-form.js.",
+  "fields": [
+    { "key": "slots", "label": "Reserved slots", "type": "int", "min": 0, "max": 62, "default": 0,
+      "help": "Slots only whitelisted players may take, out of the first server's max players. 0 turns reserved slots off." },
+    { "key": "password", "label": "Reserved password", "type": "string", "secret": true, "default": "", "maxLength": 128,
+      "help": "Join password the server gets while its public slots are full. Give it to whitelisted players. No spaces." },
+    { "key": "whitelist", "label": "Whitelist", "type": "list", "default": [], "placeholder": "64-character player IDs, comma separated",
+      "help": "Players who may use reserved slots. Admins always may. Players find their ID under Settings → Connectivity → Your player ID." },
+    { "key": "bump", "label": "Bump to make room", "type": "bool", "default": false,
+      "help": "When the server is completely full and a whitelisted player is refused, kick one player who isn't whitelisted so they can join." },
+    { "key": "bump_order", "label": "Bump order", "type": "list", "default": ["lowest_score", "least_session_time"], "placeholder": "lowest_score, least_session_time",
+      "help": "Who is bumped first, first rule first: lowest_score (in the game being played), least_session_time (this visit), least_total_time (all visits). Ties go to the newest player." }
+  ],
+  "bumpRules": ["lowest_score", "least_session_time", "least_total_time"]
+}

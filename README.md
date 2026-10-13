@@ -4,7 +4,7 @@ A desktop app for building the files a [Project Reclaimer](https://projectreclai
 
 - **Game types:** scoring, game options and simple script events.
 - **Playlists:** maps (stock, Workshop mod and saved Forge maps), game types, weights and per-entry options, with the server's limits checked as you go.
-- **Server:** `dedicated.toml` as forms. Your comments and layout are kept.
+- **Server:** `dedicated.toml` as forms. Your comments and layout are kept. A second document, `reserved-slots.toml`, sets the egg's reserved slots for whitelisted players.
 - **Mods:** an embedded Steam Workshop filtered to Halo 3, plus a list of the Halo 3 mods you're subscribed to, read from Steam's files on this PC. Each mod shows exactly which folder to copy to the server.
 - **Export:** a checklist of what to upload to the server, what's changed since last time, and which mods your playlists need.
 
@@ -26,8 +26,8 @@ npm start
 ## Workflow
 
 1. **Settings.** Check that the Steam folder and MCC install are found (they're detected automatically).
-   - The **workspace folder** (default `Documents\Halo 3 Server Manager\workspace`) is laid out exactly like the server folder: `dedicated.toml`, `playlists/`, `content/Game Modes/`, `content/Maps/`, `content/Mods/`.
-2. **Server.** Download `dedicated.toml` from the Pterodactyl File Manager and use **Import dedicated.toml…**, or start from the default. Then edit the servers, what each one plays, and the shared settings.
+   - The **workspace folder** (default `Documents\Halo 3 Server Manager\workspace`) is laid out exactly like the server folder: `dedicated.toml`, `reserved-slots.toml`, `playlists/`, `content/Game Modes/`, `content/Maps/`, `content/Mods/`.
+2. **Server.** Download `dedicated.toml` from the Pterodactyl File Manager and use **Import dedicated.toml…**, or start from the default. Then edit the servers, what each one plays, and the shared settings. To keep slots free for yourself or other whitelisted players, open the **reserved-slots.toml** tab, and raise the first server's max players by the slots you reserve.
    - Egg variables filled in on the panel override the file. Leave them empty to use the file.
 3. **Mods → Workshop.** Sign in to Steam and subscribe to Halo 3 mods. The Steam client downloads them.
 4. **Mods → My Halo 3 Mods.** Your downloaded Halo 3 mods, each with:
@@ -45,6 +45,7 @@ npm start
 ## Good to know
 
 - **Bundled modes are read-only.** Gun Game, Growth, One in the Chamber, Zone Control and Flood Infection are already on the server, so playlists can use them by name. Duplicate one to make your own version.
+  - **Flood Infection** also needs `050_floodvoi.map` from MCC's `halo3\maps` in the server's `game/halo3/maps`. `dedicated init` doesn't copy it and `dedicated check` doesn't ask for it; without it, a vote for that entry passes, the game fails to load and the vote starts over. The Export tab warns when a playlist uses it.
 - **Option values marked \*** are inferred, not confirmed by the docs. Some starting weapons are in this group. Playlists write weapons by name ("Battle rifle"), which the server checks.
   - To confirm everything before uploading, set `project-reclaimer.exe` in Settings and use **Run dedicated check** in the Export tab.
   - Settings the forms don't cover can come from the game client: set them in Game Options, use **Save as variant**, and import the file with ⤓ in Game Types. Unknown options are kept.
@@ -58,7 +59,7 @@ npm start
 | Command | What it does |
 |---|---|
 | `npm start` | Run the app. Works from VS Code's terminal: the launcher clears `ELECTRON_RUN_AS_NODE`. |
-| `npm test` | Unit tests: VDF parser, `dedicated.toml` patcher, script model, MCC map previews, stock variant defaults. |
+| `npm test` | Unit tests: VDF parser, `dedicated.toml` patcher, script model, MCC map previews, stock variant defaults, reserved slots checks. |
 | `npm run smoke` | Launch, print renderer console output, quit. `SMOKE_SCRIPT=<file.js>` runs a script in the page; `SMOKE_SHOT=<file.png>` saves a screenshot. |
 | `npm run icon` | Re-render `build/icon.png` from `build/icon.svg`. |
 | `npm run dist` | Build the portable exe into `out/`. Attach it to a GitHub release to publish it. |

@@ -183,10 +183,22 @@
       "default": 0,
       "verified": true,
       "values": [
-        { "value": 0, "label": "Map default" },
-        { "value": 11, "label": "None" }
+        { "value": 0, "label": "Default" },
+        { "value": 1, "label": "Assault rifles", "verified": false },
+        { "value": 2, "label": "Dual wield" },
+        { "value": 3, "label": "Hammers", "verified": false },
+        { "value": 4, "label": "Lasers", "verified": false },
+        { "value": 5, "label": "Rockets", "verified": false },
+        { "value": 6, "label": "Shotguns" },
+        { "value": 7, "label": "Sniper rifles" },
+        { "value": 8, "label": "Swords", "verified": false },
+        { "value": 9, "label": "No power weapons", "verified": false },
+        { "value": 10, "label": "No snipers", "verified": false },
+        { "value": 11, "label": "No weapons" },
+        { "value": 12, "label": "Random", "verified": false },
+        { "value": 13, "label": "ODST weapons", "verified": false }
       ],
-      "help": "Only the documented choices are listed. Other weapon sets: set them in the client's Game Options and import the saved variant."
+      "help": "The weapons placed on the map; Default keeps the map's own. Names and order are the server's (0.9.13). 0, 2, 6, 7 and 11 match Bungie's own variants; the rest follow the server's order."
     },
     {
       "key": "map.vehicles",
@@ -196,10 +208,18 @@
       "default": 0,
       "verified": true,
       "values": [
-        { "value": 0, "label": "Map default" },
-        { "value": 1, "label": "None" }
+        { "value": 0, "label": "Default" },
+        { "value": 1, "label": "None" },
+        { "value": 2, "label": "Mongooses", "verified": false },
+        { "value": 3, "label": "Light ground", "verified": false },
+        { "value": 4, "label": "Tanks", "verified": false },
+        { "value": 5, "label": "Aircraft", "verified": false },
+        { "value": 6, "label": "No light ground", "verified": false },
+        { "value": 7, "label": "No tanks", "verified": false },
+        { "value": 8, "label": "No aircraft", "verified": false },
+        { "value": 9, "label": "All", "verified": false }
       ],
-      "help": "Only the documented choices are listed. Other vehicle sets: set them in the client's Game Options and import the saved variant."
+      "help": "The vehicles placed on the map; Default keeps the map's own. Names and order are the server's (0.9.13); 0 and 1 are confirmed, the rest follow the server's order."
     },
     {
       "key": "player.primary_weapon",

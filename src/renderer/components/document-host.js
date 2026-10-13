@@ -5,7 +5,7 @@
 // createDocumentHost({
 //   emptyText,
 //   createEditor(doc, host) -> HTMLElement   // editor mutates doc.current, then calls host.changed(doc)
-//   validate(data) -> [{ level: 'error'|'warning', text }]
+//   validate(data, doc) -> [{ level: 'error'|'warning', text }]
 //   save(doc) -> Promise<newId>              // writes doc.current
 //   onSaved(doc), onClosed(doc), onChange()
 // })
@@ -31,7 +31,7 @@ export function createDocumentHost({ emptyText = 'Double-click an item to open i
   const el = h('div.panel.document-host', tabsEl, bodyEl, footer);
 
   const isDirty = (doc) => doc.isNew || !deepEqual(doc.saved, doc.current);
-  const issuesOf = (doc) => (validate && !doc.readOnly ? validate(doc.current) : []);
+  const issuesOf = (doc) => (validate && !doc.readOnly ? validate(doc.current, doc) : []);
 
   function drawTabs() {
     render(tabsEl, docs.map((doc) => h('div.doc-tab', {

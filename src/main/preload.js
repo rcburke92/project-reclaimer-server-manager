@@ -45,6 +45,11 @@ contextBridge.exposeInMainWorld('api', {
     import: invoke('server:import'),
   },
 
+  reservedSlots: {
+    read: invoke('reserved:read'),
+    write: invoke('reserved:write'),
+  },
+
   export: {
     plan: invoke('export:plan'),
     markUploaded: invoke('export:markUploaded'),

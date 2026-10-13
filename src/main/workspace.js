@@ -2,6 +2,7 @@
 
 // The workspace folder mirrors the server folder:
 //   dedicated.toml
+//   reserved-slots.toml (the Pterodactyl egg's reserved slots)
 //   playlists/*.playlist.json
 //   content/Game Modes/*.json
 //   content/Maps/, content/Mods/, content/disabled-mods.json

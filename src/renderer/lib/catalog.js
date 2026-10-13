@@ -3,6 +3,7 @@ import maps from '../../catalog/maps.json' with { type: 'json' };
 import gametype from '../../catalog/gametype-schema.json' with { type: 'json' };
 import playlist from '../../catalog/playlist-schema.json' with { type: 'json' };
 import server from '../../catalog/server-schema.json' with { type: 'json' };
+import reservedSlots from '../../catalog/reserved-slots-schema.json' with { type: 'json' };
 import limits from '../../catalog/limits.json' with { type: 'json' };
 
 function resolveValues(defs) {
@@ -25,6 +26,7 @@ export const catalog = {
   script: gametype.script,
   playlist,
   server,
+  reservedSlots,
   limits,
 };
 

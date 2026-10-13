@@ -8,6 +8,7 @@ const assets = require('./assets');
 const workspace = require('./workspace');
 const mods = require('./mods');
 const serverConfig = require('./server-config');
+const reservedSlots = require('./reserved-slots');
 const exporter = require('./export');
 const mccVariants = require('./mcc-variants');
 
@@ -135,6 +136,8 @@ function registerIpc() {
   handle('server:write', (data) => serverConfig.write(data));
   handle('server:createDefault', () => serverConfig.createDefault());
   handle('server:import', (file) => serverConfig.importFrom(file));
+  handle('reserved:read', () => reservedSlots.read());
+  handle('reserved:write', (data) => reservedSlots.write(data));
 
   handle('export:plan', () => exporter.plan());
   handle('export:markUploaded', (modIds) => exporter.markUploaded(modIds));
