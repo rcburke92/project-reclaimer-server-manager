@@ -1,5 +1,5 @@
 {
-  "_about": "Playlist (*.playlist.json) fields. Source: https://projectreclaimer.dev/host 'Playlist file reference'.",
+  "_about": "Playlist (*.playlist.json) fields. Source: https://projectreclaimer.dev/host 'Playlist file reference', 'Custom vote images', 'Sprint in a playlist'.",
   "version": 2,
   "header": [
     { "key": "name", "label": "Playlist name", "type": "string", "maxLength": 48, "required": true, "help": "Shown in the lobby." },
@@ -8,6 +8,21 @@
   "entry": [
     { "key": "name", "label": "Entry name", "group": "Entry", "type": "string", "maxLength": 48, "default": "", "help": "The name players see for this game." },
     { "key": "weight", "label": "Weight", "group": "Entry", "type": "int", "min": 1, "max": 100, "default": 1, "slider": true, "help": "How often ballots offer this game compared with the others." },
-    { "key": "anti_cheat", "label": "Disable anti-cheat for this game", "group": "Entry", "type": "const", "value": false, "help": "For maps or game types with unusual physics or scripts. An entry can only turn anti-cheat off." }
+    { "key": "preview_image", "label": "Vote image", "group": "Entry", "type": "string", "maxLength": 128, "default": "", "placeholder": "arena.jpg",
+      "help": "A PNG or JPEG in the server's content/Images (file name only, at most 4 MiB) shown in the vote instead of the map's artwork. Up to 32 different images per playlist." },
+    { "key": "anti_cheat", "label": "Disable anti-cheat for this game", "group": "Entry", "type": "const", "value": false, "help": "For maps or game types with unusual physics or scripts. An entry can only turn anti-cheat off." },
+    { "key": "voice_team_only", "label": "Team voice only", "group": "Entry", "type": "const", "value": true,
+      "help": "Keeps voice to teammates while this game plays: V is silent, B reaches teammates and N only nearby teammates. Can't turn on voice the server has off." }
+  ],
+  "world": [
+    { "key": "sprint", "label": "Sprint", "type": "enum", "default": "stamina",
+      "values": [
+        { "value": "off", "label": "Off" },
+        { "value": "unlimited", "label": "Unlimited" },
+        { "value": "stamina", "label": "Stamina" }
+      ],
+      "help": "Off for every playlist game unless its entry turns it on, even when the map or game type has sprint." },
+    { "key": "sprint_speed_percent", "label": "Sprint speed", "type": "int", "min": 110, "max": 200, "default": 150, "unit": " %", "help": "150% when left out." },
+    { "key": "sprint_stamina_seconds", "label": "Stamina", "type": "int", "min": 1, "max": 30, "default": 5, "unit": " s", "help": "With Stamina sprint: how long a full meter lasts. 5 seconds when left out." }
   ]
 }

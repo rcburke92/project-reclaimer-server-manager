@@ -50,6 +50,11 @@ contextBridge.exposeInMainWorld('api', {
     write: invoke('reserved:write'),
   },
 
+  nextVote: {
+    read: invoke('nextvote:read'),
+    write: invoke('nextvote:write'),
+  },
+
   export: {
     plan: invoke('export:plan'),
     markUploaded: invoke('export:markUploaded'),

@@ -106,3 +106,36 @@ const back = parseToml(patchToml(SAMPLE, d));
   assert.strictEqual(back.workshop.steamcmd, 'C:\\steamcmd\\steamcmd.exe');
   assert.strictEqual(back.host_name, 'Bob\'s "Best" Server');
 });
+
+test('campaign inline tables are written, changed and removed in place', () => {
+  const plain = (t) => JSON.parse(JSON.stringify(parseToml(t)));
+  const d = plain(SAMPLE);
+  d.server[1] = { name: 'Co-op', port: 49177, max_players: 16, campaign: { mission: 3010, difficulty: 'heroic' } };
+  let out = patchToml(SAMPLE, d);
+  assert.match(out, /^campaign = \{ mission = 3010, difficulty = "heroic" \}$/m);
+  assert.deepStrictEqual(plain(out).server[1].campaign, { mission: 3010, difficulty: 'heroic' });
+
+  d.server[1].campaign.modifiers = { health_percent: 150, damage_percent: 125 };
+  out = patchToml(out, d);
+  assert.match(out, /modifiers = \{ health_percent = 150, damage_percent = 125 \}/);
+  assert.deepStrictEqual(plain(out).server[1].campaign.modifiers, { health_percent: 150, damage_percent: 125 });
+  assert.match(out, /# set one to turn on the remote console/);
+
+  delete d.server[1].campaign;
+  d.server[1].map = 'Guardian';
+  d.server[1].game = 'Slayer';
+  out = patchToml(out, d);
+  assert.doesNotMatch(out, /campaign/);
+  assert.strictEqual(plain(out).server[1].map, 'Guardian');
+});
+
+test('welcome takes one line or a list', () => {
+  const d = JSON.parse(JSON.stringify(parseToml(SAMPLE)));
+  d.defaults.welcome = 'Welcome to {server}, {name}!';
+  d.server[0].welcome = ['Welcome, {name}!', 'Discord: discord.gg/example'];
+  d.server[1].welcome = '';
+  const back = parseToml(patchToml(SAMPLE, d));
+  assert.strictEqual(back.defaults.welcome, 'Welcome to {server}, {name}!');
+  assert.deepStrictEqual(back.server[0].welcome, ['Welcome, {name}!', 'Discord: discord.gg/example']);
+  assert.strictEqual(back.server[1].welcome, '');
+});

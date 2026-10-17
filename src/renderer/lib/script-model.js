@@ -97,14 +97,15 @@ export function writeScript(previous, rows, name) {
   out.initial = previous?.initial || [];
   for (const ev of EVENTS) {
     const list = rows.filter((r) => r.event === ev).map((r) => (r.action.simple ? buildAction(r.action) : r.action.raw));
-    if (list.length) out[ev] = list;
+    // Keep an event the file had even when empty, as the bundled Megalo modes write them.
+    if (list.length || Array.isArray(previous?.[ev])) out[ev] = list;
   }
   if (version === 2) out.logic = prevLogic || {};
   // Keep any other fields the file had (future additions).
   for (const [k, v] of Object.entries(previous || {})) {
     if (!(k in out) && !EVENTS.includes(k)) out[k] = v;
   }
-  const hasEvents = EVENTS.some((ev) => out[ev]);
+  const hasEvents = EVENTS.some((ev) => out[ev]?.length);
   const hasLogic = out.logic && Object.keys(out.logic).length;
   return hasEvents || hasLogic ? out : undefined;
 }

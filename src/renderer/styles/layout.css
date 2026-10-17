@@ -195,3 +195,8 @@ code { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 12px; color
 .check-output.fail { border-color: var(--danger); }
 .export-row .pill { justify-self: start; }
 .editor-header .field .slider-num { width: 72px; }
+
+/* next-vote.toml: one game per row */
+.next-vote-choice { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(200px, 280px) minmax(200px, 280px) 32px; gap: 10px; align-items: center; padding: 6px 0; }
+.next-vote-choice.head { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; padding-top: 0; }
+.next-vote-choice .select { min-width: 0 !important; width: 100%; }

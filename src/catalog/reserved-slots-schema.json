@@ -1,7 +1,7 @@
 {
   "_about": "reserved-slots.toml, read by the Pterodactyl egg's reclaimer-reserved-slots.py (not by Project Reclaimer itself). The egg's Reserved … variables override these keys when they aren't empty. Types follow src/renderer/lib/settings-form.js.",
   "fields": [
-    { "key": "slots", "label": "Reserved slots", "type": "int", "min": 0, "max": 62, "default": 0,
+    { "key": "slots", "label": "Reserved slots", "type": "int", "min": 0, "max": 126, "default": 0,
       "help": "Slots only whitelisted players may take, out of the first server's max players. 0 turns reserved slots off." },
     { "key": "password", "label": "Reserved password", "type": "string", "secret": true, "default": "", "maxLength": 128,
       "help": "Join password the server gets while its public slots are full. Give it to whitelisted players. No spaces." },

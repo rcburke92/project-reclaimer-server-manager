@@ -1,7 +1,7 @@
 // Game Types tab: object browser of game type files + form editor.
 import { h, render } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
-import { catalog, optionDef, ruleDef, findBaseMode } from '../lib/catalog.js';
+import { catalog, optionDef, optionApplies, optionsForMode, ruleDef, findBaseMode } from '../lib/catalog.js';
 import { control, formatValue, settingGroups } from '../lib/settings-form.js';
 import { openDialog, confirmDialog } from '../lib/dialog.js';
 import { toast } from '../lib/toast.js';
@@ -37,11 +37,12 @@ export function validateGametype(data) {
   if (catalog.bundledModes.some((m) => m.toLowerCase() === name.toLowerCase())) issues.push({ level: 'warning', text: 'Same name as a bundled mode: playlists will pick the bundled one' });
   if (catalog.baseModes.some((m) => m.value.toLowerCase() === name.toLowerCase())) issues.push({ level: 'warning', text: 'Same name as a base mode: playlists will pick the base mode' });
   for (const [key, value] of Object.entries(data.options || {})) {
-    const def = optionDef(key);
+    const def = optionDef(key, data.mode);
     if (def.unknown) continue;
-    if (def.verified === false) issues.push({ level: 'warning', text: `${def.label}: not confirmed by the docs` });
-    const v = Array.isArray(def.values) ? def.values.find((x) => x.value === value) : null;
-    if (v && v.verified === false) issues.push({ level: 'warning', text: `${def.label} "${v.label}": value not confirmed by the docs` });
+    // The server refuses an option its base mode doesn't have, and values outside the option's range.
+    if (!optionApplies(key, data.mode)) issues.push({ level: 'error', text: `${def.label} (${key}) isn't a ${findBaseMode(data.mode)?.label || data.mode} option` });
+    if (Array.isArray(def.values) && !def.values.some((x) => x.value === value)) issues.push({ level: 'error', text: `${def.label} has no choice ${value}` });
+    if (def.type === 'int' && (typeof value !== 'number' || value < def.min || value > def.max)) issues.push({ level: 'error', text: `${def.label} must be ${def.min} to ${def.max}` });
   }
   return issues;
 }
@@ -87,6 +88,7 @@ function createEditor(doc, host) {
     const sel = control({ type: 'enum', values: known ? modes : [...modes, { value: data.mode, label: data.mode }] }, data.mode, (v) => {
       data.mode = v;
       drawScoring();
+      drawOptions();
       changed();
     }, { disabled: ro || !!data.script });
     render(modeHost, sel, data.script ? h('span.dim', { style: { marginLeft: '8px' } }, 'Scripts need Slayer') : null);
@@ -113,10 +115,11 @@ function createEditor(doc, host) {
     }));
   }
 
-  // ---- options (toggle on/off)
+  // ---- options (toggle on/off): the base mode's own, plus any the file sets that it doesn't know
   function optionDefs() {
-    const extra = Object.keys(data.options).filter((k) => optionDef(k).unknown).map(optionDef);
-    return [...catalog.options, ...extra];
+    const defs = optionsForMode(data.mode);
+    const extra = Object.keys(data.options).filter((k) => !defs.some((d) => d.key === k)).map((k) => optionDef(k, data.mode));
+    return [...defs, ...extra];
   }
 
   function drawOptions() {
@@ -125,7 +128,7 @@ function createEditor(doc, host) {
       h('div.summary-list', keys.length === 0
         ? h('div.summary-empty', 'No game options set: everything plays as the base mode has it.')
         : keys.map((key) => {
-          const def = optionDef(key);
+          const def = optionDef(key, data.mode);
           return summaryRow({
             label: def.label,
             group: def.unknown ? key : def.group,

@@ -1,22 +1,18 @@
 {
-  "_about": "Every dedicated.toml setting the Server tab edits. Source: https://projectreclaimer.dev/host 'The configuration file', 'Workshop downloads', 'VPN blocking'. Types follow src/renderer/lib/settings-form.js.",
+  "_about": "Every dedicated.toml setting the Server tab edits. Source: https://projectreclaimer.dev/host 'The configuration file', 'Campaign co-op', 'Workshop downloads', 'VPN blocking' (0.9.18). Types follow src/renderer/lib/settings-form.js.",
   "sections": [
     {
       "id": "general",
       "table": null,
       "title": "General",
       "fields": [
-        { "key": "host_name", "label": "Host name", "type": "string", "maxLength": 48, "default": "Dedicated server", "wide": true,
-          "help": "Shown under each server's name in the browser, on its card and in its lobby." },
-        { "key": "admins", "label": "Admins", "type": "list", "default": [], "placeholder": "64-character player IDs, comma separated",
-          "help": "Player IDs who may kick and ban on every server. IDs appear in the server log when players join." },
-        { "key": "public_address", "label": "Public address", "type": "string", "default": "", "placeholder": "empty = detect",
-          "help": "IPv4 address or DNS name players connect to. Leave empty to detect it." },
+        { "key": "host_name", "label": "Host name", "type": "string", "maxLength": 48, "default": "Dedicated server", "wide": true, "help": "Shown under each server's name in the browser, on its card and in its lobby." },
+        { "key": "admins", "label": "Admins", "type": "list", "default": [], "placeholder": "64-character player IDs, comma separated", "help": "Player IDs who may kick and ban on every server. IDs appear in the server log when players join." },
+        { "key": "public_address", "label": "Public address", "type": "string", "default": "", "placeholder": "empty = detect", "help": "IPv4 address or DNS name players connect to. Leave empty to detect it." },
         { "key": "upnp", "label": "UPnP", "type": "bool", "default": false, "help": "Ask the router to forward the ports. Leave it off on a VPS." },
-        { "key": "auto_update", "label": "Auto update", "type": "bool", "default": false,
-          "help": "Install new stable releases and restart the servers, interrupting their games." },
-        { "key": "stats_server", "label": "Stats server", "type": "string", "default": "", "placeholder": "empty = public service",
-          "help": "Where finished games are reported for player ranks. Empty uses the public service; \"off\" reports nowhere." }
+        { "key": "auto_update", "label": "Auto update", "type": "bool", "default": false, "help": "Install new stable releases and restart the servers, interrupting their games." },
+        { "key": "auto_reload", "label": "Apply edits while running", "type": "bool", "default": true, "help": "From 0.9.18 (auto_reload). Saved edits to this file, its playlists and variants, and content/Maps and content/Game Modes apply a couple of seconds later, once they pass the same checks as dedicated check; players stay connected. Off waits for dedicated reload or RCON reload." },
+        { "key": "stats_server", "label": "Stats server", "type": "string", "default": "", "placeholder": "empty = public service", "help": "Where finished games are reported for player ranks. Empty uses the public service; \"off\" reports nowhere." }
       ]
     },
     {
@@ -36,11 +32,9 @@
       "table": "master",
       "title": "Discovery [master]",
       "fields": [
-        { "key": "enabled", "label": "Run local master", "type": "bool", "default": true,
-          "help": "Run this machine's master. Servers report to the two public masters either way." },
+        { "key": "enabled", "label": "Run local master", "type": "bool", "default": true, "help": "Run this machine's master. Servers report to the two public masters either way." },
         { "key": "port", "label": "Master port", "type": "int", "min": 1024, "max": 65535, "default": 49175, "help": "TCP port." },
-        { "key": "peers", "label": "Peers", "type": "list", "default": [], "placeholder": "https://… addresses",
-          "help": "More masters to report to and share listings with." },
+        { "key": "peers", "label": "Peers", "type": "list", "default": [], "placeholder": "https://… addresses", "help": "More masters to report to and share listings with." },
         { "key": "origin", "label": "Origin", "type": "string", "default": "", "help": "Public address when an HTTPS reverse proxy sits in front of the master." }
       ]
     },
@@ -49,14 +43,8 @@
       "table": "rcon",
       "title": "Remote console [rcon]",
       "fields": [
-        { "key": "password", "label": "RCON password", "type": "string", "secret": true, "default": "", "maxLength": 128,
-          "help": "8 to 128 characters. Setting one turns on the remote console.", "minLength": 8 },
-        { "key": "address", "label": "RCON address", "type": "enum", "default": "127.0.0.1",
-          "values": [
-            { "value": "127.0.0.1", "label": "127.0.0.1 (this machine only)" },
-            { "value": "0.0.0.0", "label": "0.0.0.0 (any address)" }
-          ],
-          "help": "127.0.0.1 keeps RCON inside the machine/container; the Pterodactyl panel console still works." }
+        { "key": "password", "label": "RCON password", "type": "string", "secret": true, "default": "", "maxLength": 128, "help": "8 to 128 characters. Setting one turns on the remote console.", "minLength": 8 },
+        { "key": "address", "label": "RCON address", "type": "enum", "default": "127.0.0.1", "values": [{"value": "127.0.0.1", "label": "127.0.0.1 (this machine only)"}, {"value": "0.0.0.0", "label": "0.0.0.0 (any address)"}], "help": "127.0.0.1 keeps RCON inside the machine/container; the Pterodactyl panel console still works." }
       ]
     },
     {
@@ -64,12 +52,10 @@
       "table": "workshop",
       "title": "Workshop downloads [workshop]",
       "fields": [
-        { "key": "items", "label": "Workshop item IDs", "type": "list", "default": [], "placeholder": "e.g. 2899741683",
-          "help": "Items the server downloads itself (up to 64 in all). Needs Steam or SteamCMD on the server, which the Pterodactyl container doesn't have: copy mods into content/Mods instead." },
+        { "key": "items", "label": "Workshop item IDs", "type": "list", "default": [], "placeholder": "e.g. 2899741683", "help": "Items the server downloads itself (up to 64 in all). Needs Steam or SteamCMD on the server, which the Pterodactyl container doesn't have: copy mods into content/Mods instead." },
         { "key": "steamcmd", "label": "SteamCMD program", "type": "string", "default": "", "wide": true, "help": "Without it, the Steam app on the server PC downloads." },
         { "key": "username", "label": "SteamCMD account", "type": "string", "default": "", "help": "An account that owns MCC." },
-        { "key": "update_check_minutes", "label": "Update check (minutes)", "type": "int", "min": 0, "max": 10080, "default": 60,
-          "help": "Minutes between looks for newer versions of downloaded items; 0 never looks." }
+        { "key": "update_check_minutes", "label": "Update check (minutes)", "type": "int", "min": 0, "max": 10080, "default": 60, "help": "Minutes between looks for newer versions of downloaded items; 0 never looks." }
       ]
     },
     {
@@ -77,8 +63,7 @@
       "table": "vpn",
       "title": "VPN blocking [vpn]",
       "fields": [
-        { "key": "lists", "label": "Block lists", "type": "list", "default": ["default"], "placeholder": "default, https://…, my-ranges.txt",
-          "help": "Networks VPN blocking refuses. Your own lists replace the defaults; include \"default\" to add to them." }
+        { "key": "lists", "label": "Block lists", "type": "list", "default": ["default"], "placeholder": "default, https://…, my-ranges.txt", "help": "Networks VPN blocking refuses. Your own lists replace the defaults; include \"default\" to add to them." }
       ]
     }
   ],
@@ -86,34 +71,50 @@
     { "key": "name", "label": "Name", "type": "string", "maxLength": 48, "required": true, "perServerOnly": true, "help": "Required and unique, up to 48 characters." },
     { "key": "port", "label": "Port", "type": "int", "min": 1024, "max": 65535, "required": true, "perServerOnly": true, "help": "Required, unique UDP game port. On Pterodactyl, use the allocation's port." },
     { "key": "enabled", "label": "Enabled", "type": "bool", "default": true, "perServerOnly": true, "help": "Off keeps the entry without running it." },
-    { "key": "max_players", "label": "Max players", "type": "int", "min": 1, "max": 63, "default": 16, "slider": true, "help": "1 to 63, split-screen players included. Co-op holds at most 16." },
-    { "key": "voice", "label": "Voice chat", "type": "bool", "default": true },
+    { "key": "max_players", "label": "Max players", "type": "int", "min": 1, "max": 127, "default": 16, "slider": true, "help": "1 to 127, split-screen players included. A campaign server takes at most 16." },
+    { "key": "min_players", "label": "Min players", "type": "int", "min": 1, "max": 127, "default": 1, "help": "Wait in the lobby until this many players are in: no playlist vote or automatic start before that. Up to max players." },
+    { "key": "voice", "label": "Voice chat", "type": "bool", "default": true, "help": "Off turns every kind of voice chat off." },
+    { "key": "voice_global", "label": "Global voice (V)", "type": "bool", "default": true, "help": "Each voice scope can be turned off on its own; a talk key whose scope is off stays silent. Off with team voice off leaves only proximity chat." },
+    { "key": "voice_team", "label": "Team voice (B)", "type": "bool", "default": true },
+    { "key": "voice_proximity", "label": "Proximity voice (N)", "type": "bool", "default": true },
     { "key": "text_chat", "label": "Text chat", "type": "bool", "default": true },
+    { "key": "welcome", "label": "Welcome message", "type": "lines", "default": "", "maxLines": 5, "maxLength": 300, "placeholder": "Welcome to {server}, {name}!", "help": "Chat lines every player reads as they join, one per line (up to 5, 300 characters each). {name} is the player's name, {server} the server's. Needs text chat." },
     { "key": "votes", "label": "Player votes", "type": "bool", "default": true },
     { "key": "chat_log", "label": "Chat log", "type": "bool", "default": true, "help": "Keep text chat in a file per day." },
-    { "key": "anti_cheat", "label": "Anti-cheat", "type": "enum", "default": "enforce",
-      "values": [
-        { "value": "enforce", "label": "Enforce (reject and kick)" },
-        { "value": "detect", "label": "Detect (reject and log)" },
-        { "value": "off", "label": "Off" }
-      ] },
+    { "key": "friendly_fire", "label": "Friendly fire", "type": "bool", "default": true, "help": "Off stops players hurting teammates and campaign co-op partners in every game. On follows each game type's own rules." },
+    { "key": "team_changing", "label": "Team changing", "type": "enum", "default": "balanced", "values": [{"value": "balanced", "label": "Balanced (only to a smaller team)"}, {"value": "game_type", "label": "Follow the game type"}, {"value": "off", "label": "Off"}] },
+    { "key": "anti_cheat", "label": "Anti-cheat", "type": "enum", "default": "enforce", "values": [{"value": "enforce", "label": "Enforce (reject and kick)"}, {"value": "detect", "label": "Detect (reject and log)"}, {"value": "off", "label": "Off"}] },
     { "key": "block_vpn", "label": "Block VPNs", "type": "bool", "default": true, "help": "Refuse players who connect through a VPN, proxy or hosting provider." },
     { "key": "max_ping", "label": "Max ping", "type": "int", "min": 0, "max": 1000, "default": 0, "unit": " ms", "help": "Checked as players join. 0 takes everyone." },
     { "key": "load_timeout", "label": "Load timeout", "type": "int", "min": 0, "max": 600, "default": 30, "unit": " s", "help": "Seconds one player may hold up the next game while loading. 0 waits forever." },
-    { "key": "team_changing", "label": "Team changing", "type": "enum", "default": "balanced",
-      "values": [
-        { "value": "balanced", "label": "Balanced (only to a smaller team)" },
-        { "value": "game_type", "label": "Follow the game type" },
-        { "value": "off", "label": "Off" }
-      ] },
+    { "key": "trust_player_games", "label": "Trust player games (campaign)", "type": "bool", "default": true, "help": "Campaign servers: when every player's game goes out of step with the server's, take one player's game instead of making everyone load the server's." },
     { "key": "hidden", "label": "Hidden", "type": "bool", "default": false, "help": "Online but never listed; players join by address." },
     { "key": "password", "label": "Join password", "type": "string", "secret": true, "default": "", "maxLength": 128, "help": "Empty lets anyone in." },
     { "key": "share_mods", "label": "Share mods", "type": "bool", "default": false, "help": "Players who lack a mod can download it from the server." },
     { "key": "share_rate", "label": "Share rate", "type": "int", "min": 0, "max": 10000, "default": 20, "unit": " Mbit/s", "help": "Upload limit for mod downloads. 0 is no limit." },
+    { "key": "customization", "label": "Character mods", "type": "list", "default": [], "placeholder": "Armor Pack, Sci-Fi Heroes", "help": "From 0.9.18. Character mods whose characters the server's multiplayer games add, by the names Customize shows (\"Armor Pack\" also names Armor Pack v2) or their folders in content/Mods. Needs all 27 multiplayer maps in game/." },
+    { "key": "require_customization", "label": "Players must accept them", "type": "bool", "default": false, "help": "From 0.9.18 (require_customization). On: players must take the character mods to join." },
+    { "key": "no_vanilla_characters", "label": "No vanilla characters", "type": "bool", "default": false, "help": "From 0.9.18. On: every player plays one of the character mods' characters, never Halo 3's own." },
     { "key": "host_name", "label": "Host name (override)", "type": "string", "maxLength": 48, "default": "", "perServerOnly": true },
     { "key": "admins", "label": "Extra admins", "type": "list", "default": [], "perServerOnly": true, "help": "Admins for this server only." },
     { "key": "rcon_port", "label": "RCON port", "type": "int", "min": 1024, "max": 65535, "perServerOnly": true, "help": "Defaults to the game port. The panel console only reaches a server without its own RCON port or password." },
     { "key": "rcon_password", "label": "RCON password (override)", "type": "string", "secret": true, "perServerOnly": true }
   ],
-  "playsKeys": ["playlist", "map", "game", "base_map", "variant"]
+  "playsKeys": ["playlist", "map", "game", "base_map", "variant", "campaign"],
+  "campaign": {
+    "_about": "campaign = { … } in a [[server]] block (0.9.11+): campaign co-op instead of a playlist, map + game or variant.",
+    "fields": [
+      { "key": "mission", "label": "Mission", "type": "enum", "default": 3010, "values": [{"value": 3010, "label": "Sierra 117"}, {"value": 3020, "label": "Crow's Nest"}, {"value": 3030, "label": "Tsavo Highway"}, {"value": 3040, "label": "The Storm"}, {"value": 3050, "label": "Floodgate"}, {"value": 3070, "label": "The Ark"}, {"value": 3100, "label": "The Covenant"}, {"value": 3110, "label": "Cortana"}, {"value": 3120, "label": "Halo"}], "help": "Where the server starts. It goes on to the next mission it has, and after the last starts again here." },
+      { "key": "insertion", "label": "Start from", "type": "int", "min": 0, "max": 20, "default": 0, "help": "0 is the mission's start; 1 and up its rally points, in the order the Campaign page's Start from lists them." },
+      { "key": "difficulty", "label": "Difficulty", "type": "enum", "default": "normal", "values": [{"value": "easy", "label": "Easy"}, {"value": "normal", "label": "Normal"}, {"value": "heroic", "label": "Heroic"}, {"value": "legendary", "label": "Legendary"}] },
+      { "key": "custom_characters", "label": "Your Spartans & Elites", "type": "bool", "default": false, "help": "On: everyone plays as their own Spartan or Elite. Off: the Master Chief and the Arbiter." },
+      { "key": "customization", "label": "Character mods", "type": "list", "default": [], "placeholder": "Armor Pack", "help": "From 0.9.18. Character mods co-op players play as (naming any turns Your Spartans & Elites on). Players always take a campaign server's character mods." }
+    ],
+    "modifiers": [
+      { "key": "health_percent", "label": "Enemy health", "type": "int", "min": 25, "max": 1000, "step": 25, "default": 100, "unit": " %" },
+      { "key": "damage_percent", "label": "Enemy damage", "type": "int", "min": 25, "max": 1000, "step": 25, "default": 100, "unit": " %" },
+      { "key": "health_per_player_percent", "label": "Enemy health per player", "type": "int", "min": 0, "max": 100, "step": 5, "default": 0, "unit": " %" },
+      { "key": "damage_per_player_percent", "label": "Enemy damage per player", "type": "int", "min": 0, "max": 100, "step": 5, "default": 0, "unit": " %" }
+    ]
+  }
 }

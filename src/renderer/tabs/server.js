@@ -1,10 +1,10 @@
 // Server tab: dedicated.toml as forms, and the Pterodactyl egg's
-// reserved-slots.toml in a second document. Every setting is a toggle row: on
+// reserved-slots.toml and next-vote.toml in documents of their own. Every setting is a toggle row: on
 // writes the key, off leaves it out so the default (or [defaults]) applies.
 import { h, render, clone } from '../lib/dom.js';
 import { icon } from '../lib/icons.js';
 import { catalog } from '../lib/catalog.js';
-import { settingRow, control } from '../lib/settings-form.js';
+import { settingRow, control, linesOf } from '../lib/settings-form.js';
 import { confirmDialog } from '../lib/dialog.js';
 import { toast } from '../lib/toast.js';
 import { events } from '../lib/events.js';
@@ -12,9 +12,11 @@ import { createDocumentHost } from '../components/document-host.js';
 import { loadMapSources, allMaps } from '../lib/maps.js';
 import { loadGametypeRefs, gametypeChoices } from '../lib/gametype-refs.js';
 import { validateReservedSlots, firstServerMaxPlayers } from '../lib/reserved-slots.js';
+import { validateNextVote } from '../lib/next-vote.js';
 
 const S = catalog.server;
 const RS = catalog.reservedSlots;
+const NV = catalog.nextVote;
 const LIM = catalog.limits.server;
 const SERVER_REQUIRED = ['name', 'port'];
 const PLAYS = [
@@ -22,12 +24,14 @@ const PLAYS = [
   { value: 'playlist', label: 'Playlist' },
   { value: 'map', label: 'Map + game' },
   { value: 'variant', label: 'Variant' },
+  { value: 'campaign', label: 'Campaign co-op' },
 ];
 
 let pane;
 let host = null;
 let fileInfo = null;
 let reservedInfo = null;
+let nextVoteInfo = null;
 let updateReservedSummary = null;
 let playlists = [];
 let gametypes = [];
@@ -56,9 +60,22 @@ export function validateServerConfig(data) {
       if (ports.has(s.port)) issues.push({ level: 'error', text: `Two servers use port ${s.port}` });
       ports.set(s.port, i);
     }
-    const plays = ['playlist', 'map', 'variant'].filter((k) => s[k]);
-    if (plays.length > 1) issues.push({ level: 'error', text: `${label}: choose only one of playlist, map + game or variant` });
+    const plays = ['playlist', 'map', 'variant', 'campaign'].filter((k) => s[k]);
+    if (plays.length > 1) issues.push({ level: 'error', text: `${label}: choose only one of playlist, map + game, variant or campaign` });
     if (s.map && !s.game) issues.push({ level: 'error', text: `${label}: a map needs a game type` });
+    // A server's own setting wins over [defaults]; the server checks the result.
+    const eff = (k) => (k in s ? s[k] : data.defaults?.[k]);
+    const maxPlayers = eff('max_players') ?? 16;
+    if (s.campaign) {
+      if (!s.campaign.mission) issues.push({ level: 'error', text: `${label}: a campaign server needs a mission` });
+      if (maxPlayers > LIM.campaignMaxPlayers) issues.push({ level: 'error', text: `${label}: a campaign server takes at most ${LIM.campaignMaxPlayers} players (max players is ${maxPlayers})` });
+      if (s.base_map || s.game) issues.push({ level: 'error', text: `${label}: a campaign server can't also have a game or base map` });
+    }
+    if ((eff('min_players') ?? 1) > maxPlayers) issues.push({ level: 'error', text: `${label}: min players (${eff('min_players')}) is over max players (${maxPlayers})` });
+    const welcome = linesOf(eff('welcome'));
+    if (welcome.length && eff('text_chat') === false) issues.push({ level: 'error', text: `${label}: a welcome message needs text chat` });
+    if (welcome.length > LIM.welcomeLines) issues.push({ level: 'error', text: `${label}: a welcome message has at most ${LIM.welcomeLines} lines` });
+    if (welcome.some((l) => l.length > LIM.welcomeLineMax)) issues.push({ level: 'error', text: `${label}: welcome lines hold at most ${LIM.welcomeLineMax} characters` });
     if (s.rcon_password && (s.rcon_password.length < LIM.rconPassword[0] || s.rcon_password.length > LIM.rconPassword[1])) {
       issues.push({ level: 'error', text: `${label}: RCON password must be ${LIM.rconPassword[0]}–${LIM.rconPassword[1]} characters` });
     }
@@ -99,6 +116,7 @@ function sectionCard(title, body, { open = true, note } = {}) {
 }
 
 function playsOf(s) {
+  if (s.campaign) return 'campaign';
   if (s.playlist) return 'playlist';
   if (s.map || s.game) return 'map';
   if (s.variant) return 'variant';
@@ -109,6 +127,10 @@ function playsSummary(s) {
   if (s.playlist) return `Playlist: ${playlists.find((p) => `playlists/${p.file}` === s.playlist)?.name || s.playlist}`;
   if (s.map) return `${s.map} · ${s.game || '?'}`;
   if (s.variant) return `Variant: ${s.variant.replace(/^content\/Game Modes\//i, '')}`;
+  if (s.campaign) {
+    const mission = S.campaign.fields[0].values.find((m) => m.value === s.campaign.mission);
+    return `Campaign: ${mission?.label || s.campaign.mission || '?'}, ${s.campaign.difficulty || 'normal'}`;
+  }
   return 'Slayer on Guardian (no playlist, map or variant set)';
 }
 
@@ -126,6 +148,21 @@ function selectWithGroups(choices, value, onChange, { placeholder } = {}) {
   return sel;
 }
 
+/** campaign = { mission, insertion, difficulty, custom_characters, modifiers = { … } } of one server. */
+function campaignForm(c, changed) {
+  const rows = (fields, obj, clean) => toggleRows(fields, obj, () => { clean?.(); changed(); });
+  // modifiers is written only while one is set.
+  const modifiers = c.modifiers || {};
+  const tidyModifiers = () => { if (Object.keys(modifiers).length) c.modifiers = modifiers; else delete c.modifiers; };
+  const [mission, ...rest] = S.campaign.fields;
+  return h('div.campaign-form',
+    h('div.field', h('label', 'Mission'), control(mission, c.mission, (v) => { c.mission = v; changed(); })),
+    h('div.flush', rows(rest, c)),
+    h('div.section-title', 'Modifiers', h('span.dim', '(off = the game\'s own)')),
+    h('div.flush', rows(S.campaign.modifiers, modifiers, tidyModifiers)),
+    h('div.help', 'The server needs every mission it plays: run dedicated init --from --maps campaign and upload game/. It goes on to the next mission it has, and after the last starts again from this one.'));
+}
+
 function serverCard(data, s, index, redraw, docChanged) {
   // Every change also refreshes the card's one-line summary.
   const changed = () => { updateHead(); docChanged(); };
@@ -140,6 +177,16 @@ function serverCard(data, s, index, redraw, docChanged) {
     if (kind === 'playlist' && playlists[0]) s.playlist = `playlists/${playlists[0].file}`;
     if (kind === 'map') { s.map = 'Guardian'; s.game = 'Slayer'; }
     if (kind === 'variant' && gametypes[0]) s.variant = `content/Game Modes/${gametypes[0].file}`;
+    if (kind === 'campaign') {
+      s.campaign = { mission: 3010 };
+      // A campaign server takes at most 16 players; redraw so the row shows it.
+      if ((s.max_players ?? data.defaults?.max_players ?? 16) > LIM.campaignMaxPlayers) {
+        s.max_players = LIM.campaignMaxPlayers;
+        redraw();
+        changed();
+        return;
+      }
+    }
     drawPlays();
     changed();
   }
@@ -157,6 +204,8 @@ function serverCard(data, s, index, redraw, docChanged) {
       picker = h('div.plays-pickers',
         h('div.field', h('label', 'Map'), selectWithGroups(maps, s.map, (v) => { s.map = v; changed(); })),
         h('div.field', h('label', 'Game type'), selectWithGroups(gametypeChoices(), s.game, (v) => { s.game = v; changed(); })));
+    } else if (kind === 'campaign') {
+      picker = campaignForm(s.campaign, changed);
     } else if (kind === 'variant') {
       picker = gametypes.length
         ? selectWithGroups(gametypes.map((g) => ({ value: `content/Game Modes/${g.file}`, label: g.name })), s.variant, (v) => { s.variant = v; changed(); })
@@ -233,7 +282,7 @@ function createEditor(doc, docHost) {
     const defaultFields = S.serverFields.filter((f) => !f.perServerOnly);
     render(root,
       h('div.readonly-banner', icon('info'),
-        h('span', 'Egg variables filled in on the Pterodactyl panel (Host Name, Server Password, Max Players, Admins, RCON, Anti-Cheat, Block VPNs, Hidden, Auto Update, Public Address) override these settings. Leave them empty in the panel to use this file.')),
+        h('span', 'Egg variables filled in on the Pterodactyl panel override the settings outside [[server]] blocks: the general settings, [rcon], [master] and the [defaults] below (max and min players, voice, chat, welcome, friendly fire, team changing, anti-cheat, VPNs, ping, load timeout, mods sharing, …). Leave them empty in the panel to use this file.')),
       h('div.section-title', 'Servers', h('span.dim', `(${data.server.length})`)),
       data.server.map((s, i) => serverCard(data, s, i, draw, changed)),
       h('div.add-row', h('button.btn.primary', {
@@ -278,6 +327,56 @@ function createReservedEditor(doc, docHost) {
     sectionCard('Reserved slots', toggleRows(RS.fields, data, onChange), { open: true, note: summary }));
 }
 
+// ---------------------------------------------------------------- next-vote.toml
+
+function mapChoices() {
+  return allMaps().map((m) => ({ value: m.ref, label: m.kind === 'stock' ? m.name : `${m.name} (${m.sub})`, group: m.kind === 'stock' ? 'Stock maps' : m.kind === 'mod' ? 'Mod maps' : 'Saved maps' }));
+}
+
+function createNextVoteEditor(doc, docHost) {
+  const data = doc.current;
+  const changed = () => docHost.changed(doc);
+  const listHost = h('div');
+
+  function drawList() {
+    const choices = data.choice || [];
+    const remove = (i) => {
+      choices.splice(i, 1);
+      if (!choices.length) delete data.choice; // no bare "choice = []" in the file
+      drawList();
+      changed();
+    };
+    render(listHost,
+      choices.length === 0
+        ? h('div.summary-empty', 'No games yet. Add at least two.')
+        : choices.map((c, i) => {
+          const name = h('input.input', {
+            value: c.name || '', maxLength: NV.choice[0].maxLength, placeholder: `${c.game} on ${c.map}`, style: { width: '100%' },
+            onchange: () => { const v = name.value.trim(); if (v) c.name = v; else delete c.name; changed(); },
+          });
+          return h('div.next-vote-choice',
+            name,
+            selectWithGroups(mapChoices(), c.map, (v) => { c.map = v; name.placeholder = `${c.game} on ${c.map}`; changed(); }),
+            selectWithGroups(gametypeChoices(), c.game, (v) => { c.game = v; name.placeholder = `${c.game} on ${c.map}`; changed(); }),
+            h('button.icon-btn.small.danger', { title: 'Remove', onclick: () => remove(i) }, icon('trash')));
+        }),
+      h('div.add-row', h('button.btn', {
+        onclick: () => {
+          (data.choice ||= []).push({ map: 'Guardian', game: 'Slayer' });
+          drawList();
+          changed();
+        },
+      }, icon('plus'), 'Add game')));
+  }
+
+  drawList();
+  return h('div.editor',
+    h('div.readonly-banner', icon('info'),
+      h('span', 'For the Pterodactyl egg: an admin types !nextvote in game chat (or nextvote in the panel console), players answer with a number, and the winning game plays after the current one, instead of the playlist\'s ballot. Works on the first [[server]], through RCON. Saved edits apply at the next vote.')),
+    sectionCard('Vote', toggleRows(NV.fields, data, changed), { open: true }),
+    sectionCard('Games to choose from', h('div.panel-body', h('div.next-vote-choice.head', h('span', 'Name players read'), h('span', 'Map'), h('span', 'Game type'), h('span')), listHost), { open: true, note: 'Each vote draws its games at random from these' }));
+}
+
 // ---------------------------------------------------------------- tab
 
 
@@ -289,8 +388,9 @@ async function load() {
       window.api.workspace.list('gametypes').then((l) => l.filter((g) => !g.readOnly)),
     ]);
   } catch { playlists = []; gametypes = []; }
-  [fileInfo, reservedInfo] = await Promise.all([window.api.server.read(), window.api.reservedSlots.read()]);
+  [fileInfo, reservedInfo, nextVoteInfo] = await Promise.all([window.api.server.read(), window.api.reservedSlots.read(), window.api.nextVote.read()]);
   if (reservedInfo.error) toast.error(reservedInfo.error);
+  if (nextVoteInfo.error) toast.error(nextVoteInfo.error);
   draw();
 }
 
@@ -317,10 +417,20 @@ function draw() {
   if (!host) {
     host = createDocumentHost({
       emptyText: '',
-      createEditor: (doc, docHost) => (doc.id === 'reserved' ? createReservedEditor(doc, docHost) : createEditor(doc, docHost)),
-      validate: (data, doc) => (doc.id === 'reserved' ? validateReservedSlots(data, host.find('dedicated')?.current) : validateServerConfig(data)),
+      createEditor: (doc, docHost) => {
+        if (doc.id === 'reserved') return createReservedEditor(doc, docHost);
+        if (doc.id === 'nextvote') return createNextVoteEditor(doc, docHost);
+        return createEditor(doc, docHost);
+      },
+      validate: (data, doc) => {
+        const dedicated = host.find('dedicated')?.current;
+        if (doc.id === 'reserved') return validateReservedSlots(data, dedicated);
+        if (doc.id === 'nextvote') return validateNextVote(data, dedicated);
+        return validateServerConfig(data);
+      },
       save: async (doc) => {
         if (doc.id === 'reserved') { reservedInfo = await window.api.reservedSlots.write(doc.current); return 'reserved'; }
+        if (doc.id === 'nextvote') { nextVoteInfo = await window.api.nextVote.write(doc.current); return 'nextvote'; }
         fileInfo = await window.api.server.write(doc.current);
         return 'dedicated';
       },
@@ -329,7 +439,7 @@ function draw() {
   } else {
     // Pick up changes made outside the app, in documents without unsaved edits.
     const dirty = host.dirtyDocs();
-    for (const [id, data] of [['dedicated', fileInfo.data], ['reserved', reservedInfo?.data]]) {
+    for (const [id, data] of [['dedicated', fileInfo.data], ['reserved', reservedInfo?.data], ['nextvote', nextVoteInfo?.data]]) {
       const doc = host.find(id);
       if (doc && data && !dirty.includes(doc)) { doc.saved = clone(data); doc.current = clone(data); host.rebuild(doc); }
     }
@@ -343,6 +453,7 @@ function openDocs() {
   const activeId = host.active()?.id;
   if (!host.find('dedicated')) host.open({ id: 'dedicated', title: 'dedicated.toml', data: fileInfo.data });
   if (!host.find('reserved') && reservedInfo?.data) host.open({ id: 'reserved', title: 'reserved-slots.toml', data: reservedInfo.data });
+  if (!host.find('nextvote') && nextVoteInfo?.data) host.open({ id: 'nextvote', title: 'next-vote.toml', data: nextVoteInfo.data });
   host.open({ id: activeId || 'dedicated' });
 }
 

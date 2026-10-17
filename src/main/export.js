@@ -15,11 +15,13 @@ const workspace = require('./workspace');
 const mods = require('./mods');
 const { parseToml } = require('./toml-patch');
 
-const UPLOAD_DIRS = ['playlists', path.join('content', 'Game Modes'), path.join('content', 'Maps')];
-const UPLOAD_FILES = ['dedicated.toml', 'reserved-slots.toml', path.join('content', 'disabled-mods.json')];
+// content/Images holds playlist vote images (an entry's preview_image).
+const UPLOAD_DIRS = ['playlists', path.join('content', 'Game Modes'), path.join('content', 'Maps'), path.join('content', 'Images')];
+const UPLOAD_FILES = ['dedicated.toml', 'reserved-slots.toml', 'next-vote.toml', path.join('content', 'disabled-mods.json')];
 const WORKSHOP_RE = /^workshop:(\d+)\//i;
-// A game type name or file for the bundled Flood Infection mode or a copy of it.
-const FLOOD_RE = /flood[-_ ]?infection/i;
+// A game type name or file for the bundled Flood Infection mode, a copy of it, or a
+// mode built on it such as H4 Flood (h4-flood.json): all load the campaign Flood.
+const FLOOD_RE = /flood[-_ ]?infection|h4[-_ ]?flood/i;
 
 function manifestFile() {
   return path.join(app.getPath('userData'), 'export-manifest.json');
@@ -70,6 +72,8 @@ function referencedMods() {
   const warnings = [];
   const flood = new Set(); // what plays Flood Infection
   const addFlood = (game, by) => { if (FLOOD_RE.test(String(game || ''))) flood.add(by); };
+  const imagesDir = path.join(root, 'content', 'Images');
+  const missingImages = new Map(); // file -> playlists naming it
 
   for (const item of workspace.list('playlists')) {
     if (item.error) { warnings.push(`Playlist ${item.file}: ${item.error}`); continue; }
@@ -77,6 +81,10 @@ function referencedMods() {
     for (const g of data.games || []) {
       add(g.map, `Playlist "${item.name}"`); add(g.base_map, `Playlist "${item.name}"`);
       addFlood(g.game, `Playlist "${item.name}"`);
+      if (g.preview_image && !fs.existsSync(path.join(imagesDir, g.preview_image))) {
+        if (!missingImages.has(g.preview_image)) missingImages.set(g.preview_image, new Set());
+        missingImages.get(g.preview_image).add(`"${item.name}"`);
+      }
     }
   }
   const tomlFile = path.join(root, 'dedicated.toml');
@@ -96,6 +104,7 @@ function referencedMods() {
   // doesn't copy and dedicated check doesn't ask for. Without it the game fails to
   // load and the vote starts over.
   if (flood.size) warnings.push(`${[...flood].join(', ')} ${flood.size > 1 ? 'play' : 'plays'} Flood Infection, which needs 050_floodvoi.map in the server's game/halo3/maps (copy it from MCC's halo3\\maps). dedicated init doesn't copy it and dedicated check doesn't ask for it: without it, the game fails to load and the vote starts over.`);
+  for (const [file, by] of missingImages) warnings.push(`Vote image ${file} (playlist ${[...by].join(', ')}) isn't in the workspace's content/Images. Put it there to upload it, or players see the map's artwork.`);
   return { refs, warnings };
 }
 

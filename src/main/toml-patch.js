@@ -3,7 +3,8 @@
 // Writes changes into an existing dedicated.toml without disturbing anything
 // else: comments, blank lines, key order and value formatting are kept for
 // every value that didn't change. Supports what dedicated.toml uses: top-level
-// keys, [tables] and [[server]] array tables, with single- or multi-line values.
+// keys, [tables] and [[server]] array tables, with single- or multi-line values,
+// and inline tables inside them (campaign = { mission = 3010, … }).
 
 const TOML = require('smol-toml');
 
@@ -23,6 +24,12 @@ function formatValue(v) {
     const oneLine = `[${items.join(', ')}]`;
     if (oneLine.length <= 80) return oneLine;
     return `[\n${items.map((i) => `    ${i},`).join('\n')}\n]`;
+  }
+  if (v && typeof v === 'object') {
+    // An inline table, always on one line as TOML requires.
+    const items = Object.entries(v).filter(([, x]) => x !== undefined && x !== null)
+      .map(([k, x]) => `${/^[A-Za-z0-9_-]+$/.test(k) ? k : formatString(k)} = ${formatValue(x).replace(/\n\s*/g, ' ').replace(/,\s*\]/, ' ]')}`);
+    return items.length ? `{ ${items.join(', ')} }` : '{}';
   }
   throw new Error(`Unsupported value: ${JSON.stringify(v)}`);
 }
@@ -139,17 +146,21 @@ function removeKey(section, key) {
   if (at) section.lines.splice(at.start, at.end - at.start + 1);
 }
 
-function patchSection(section, oldObj, newObj) {
+/**
+ * inline: objects are inline-table values (inside [tables] and [[arrays]]); at the
+ * top level they are sub-tables, which have sections of their own.
+ */
+function patchSection(section, oldObj, newObj, inline = section.kind !== 'root') {
+  const isTable = (v) => v && typeof v === 'object' && !Array.isArray(v);
   for (const [k, v] of Object.entries(newObj || {})) {
     if (v === undefined || v === null) continue;
-    if (v && typeof v === 'object' && !Array.isArray(v)) continue; // sub-tables are separate sections
+    if (isTable(v) && !inline) continue;
     if (oldObj && k in oldObj && JSON.stringify(oldObj[k]) === JSON.stringify(v)) continue;
     setKey(section, k, v);
   }
   for (const k of Object.keys(oldObj || {})) {
     const nv = newObj ? newObj[k] : undefined;
-    const ov = oldObj[k];
-    if (ov && typeof ov === 'object' && !Array.isArray(ov)) continue;
+    if (isTable(oldObj[k]) && !inline) continue;
     if (nv === undefined || nv === null) removeKey(section, k);
   }
 }

@@ -3,10 +3,11 @@
 //
 // A definition looks like:
 //   { key: 'player.shields', label: 'Shields', help: '…', group: 'Player',
-//     type: 'enum' | 'int' | 'number' | 'bool' | 'string' | 'list',
+//     type: 'enum' | 'int' | 'number' | 'bool' | 'string' | 'list' | 'lines',
 //     values: [{ value: 1, label: 'No shields' }, …],   // enum
 //     min, max, step, unit, slider: true,               // int / number
 //     maxLength, placeholder,                           // string
+//     maxLines, maxLength (per line), placeholder,       // lines: one text line, or a list of them
 //     default }
 
 import { h, deepEqual } from './dom.js';
@@ -35,9 +36,24 @@ export function formatValue(def, value) {
     }
     case 'bool': return value ? (def.onLabel || 'On') : (def.offLabel || 'Off');
     case 'list': return (value || []).join(', ') || 'none';
+    case 'lines': return linesOf(value).join(' / ') || 'none';
     case 'const': return def.valueLabel || 'Yes';
     default: return def.unit ? `${value}${def.unit}` : String(value);
   }
+}
+
+/** A 'lines' value (one string, or a list of them) as a list of lines. */
+export function linesOf(value) {
+  if (Array.isArray(value)) return value.map(String);
+  return value ? String(value).split('\n') : [];
+}
+
+/** Text area contents -> a 'lines' value: '' for none, a string for one line, else a list. */
+function linesValue(def, text) {
+  const lines = String(text).split(/\r?\n/).map((l) => l.trimEnd()).filter(Boolean)
+    .map((l) => (def.maxLength ? l.slice(0, def.maxLength) : l))
+    .slice(0, def.maxLines || undefined);
+  return lines.length === 0 ? '' : lines.length === 1 ? lines[0] : lines;
 }
 
 /** Clamp/convert a raw input value according to the definition. */
@@ -130,6 +146,20 @@ export function control(def, value, onChange, { disabled = false } = {}) {
         },
       });
       return def.unit ? h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '6px' } }, input, h('span.muted', def.unit)) : input;
+    }
+    case 'lines': {
+      // One line of text per row; written as a string for one line, a list for more.
+      const input = h('textarea.input', {
+        value: linesOf(value).join('\n'), disabled, placeholder: def.placeholder || '',
+        rows: Math.min(def.maxLines || 5, Math.max(2, linesOf(value).length)),
+        style: { width: '420px', resize: 'vertical', fontFamily: 'inherit' },
+        onchange: () => {
+          const v = linesValue(def, input.value);
+          input.value = linesOf(v).join('\n');
+          onChange(v);
+        },
+      });
+      return input;
     }
     case 'list': {
       // Comma-separated list of short values (e.g. admin IDs).

@@ -37,7 +37,7 @@ const PATHS = [
   {
     key: 'reclaimerExe',
     label: 'project-reclaimer.exe (optional)',
-    help: 'Lets the Export tab run "dedicated check" on your workspace before you upload.',
+    help: 'The client (project-reclaimer-client-vX.exe from 0.9.18) or the server-only project-reclaimer-dedicated-vX.exe, on the same version as your server. Lets the Export tab run "dedicated check" on your workspace before you upload.',
     kind: 'file',
     filters: [{ name: 'Programs', extensions: ['exe'] }],
   },

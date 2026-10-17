@@ -1,61 +1,18 @@
 {
-  "_about": "Game type (.json) and playlist rules/options. Sources: the Project Reclaimer docs (projectreclaimer.dev: game modes, host/playlist reference, Megalo trait values) and the five bundled modes in Documents/My Games/Project Reclaimer/Game Modes. Option values are the numbers the client writes; 'verified: false' marks labels inferred rather than documented. Run 'dedicated check' (Export tab) to confirm. Starting weapons: the exact list the dedicated server prints for an unknown choice (Project Reclaimer 0.9.4), numbered from -3 in that order; matches Magnum 7, Rocket launcher 10, Shotgun 11, Spartan laser 16 and No weapon 17 seen in real variants.",
+  "_about": "Game type (.json) and playlist rules/options. Options, their labels, ranges and choices are the Project Reclaimer 0.9.18 dedicated server's own, confirmed with `dedicated playlist show`; 'modes' lists the base modes an option applies to (all when left out) and 'byMode' what differs in one of them. Trait sets (respawn_traits.*, flag_carrier.*, ...) take the same traits as player.*. Values are the numbers the client writes; 0 is 'Unchanged' for player traits. Not included: mode.score (the same as score_to_win), Forge's edit_mode and editor traits, and Slayer's mode.kill/death/suicide/betrayal (the rules below). Starting weapons are numbered from -3 in the server's order.",
   "_baseModes": "value = the name playlists and dedicated.toml use; json = what a game type file's \"mode\" must hold (from mode-check: CaptureTheFlag, Slayer, Forge, Oddball, KingOfTheHill, Vip, Juggernaut, Territories, Assault, Infection, EscalationSlayer).",
   "baseModes": [
-    {
-      "value": "Slayer",
-      "label": "Slayer",
-      "scriptable": true,
-      "json": "Slayer"
-    },
-    {
-      "value": "Capture the Flag",
-      "label": "Capture the Flag",
-      "json": "CaptureTheFlag"
-    },
-    {
-      "value": "Oddball",
-      "label": "Oddball",
-      "json": "Oddball"
-    },
-    {
-      "value": "King of the Hill",
-      "label": "King of the Hill",
-      "json": "KingOfTheHill"
-    },
-    {
-      "value": "Juggernaut",
-      "label": "Juggernaut",
-      "json": "Juggernaut"
-    },
-    {
-      "value": "Territories",
-      "label": "Territories",
-      "json": "Territories"
-    },
-    {
-      "value": "Assault",
-      "label": "Assault",
-      "json": "Assault"
-    },
-    {
-      "value": "Infection",
-      "label": "Infection",
-      "json": "Infection"
-    },
-    {
-      "value": "VIP",
-      "label": "VIP",
-      "json": "Vip"
-    }
+    { "value": "Slayer", "label": "Slayer", "scriptable": true, "json": "Slayer" },
+    { "value": "Capture the Flag", "label": "Capture the Flag", "json": "CaptureTheFlag" },
+    { "value": "Oddball", "label": "Oddball", "json": "Oddball" },
+    { "value": "King of the Hill", "label": "King of the Hill", "json": "KingOfTheHill" },
+    { "value": "Juggernaut", "label": "Juggernaut", "json": "Juggernaut" },
+    { "value": "Territories", "label": "Territories", "json": "Territories" },
+    { "value": "Assault", "label": "Assault", "json": "Assault" },
+    { "value": "Infection", "label": "Infection", "json": "Infection" },
+    { "value": "VIP", "label": "VIP", "json": "Vip" }
   ],
-  "bundledModes": [
-    "Gun Game",
-    "Growth",
-    "One in the Chamber",
-    "Zone Control",
-    "Flood Infection"
-  ],
+  "bundledModes": [ "Gun Game", "Growth", "One in the Chamber", "Zone Control", "Flood Infection", "UNSC vs Covenant" ],
   "rules": [
     {
       "key": "score_to_win",
@@ -63,9 +20,9 @@
       "group": "Scoring",
       "type": "int",
       "min": 0,
-      "max": 999,
+      "max": 500,
       "default": 25,
-      "help": "Points that win a round. 0 = no limit (the time limit ends the round)."
+      "help": "Points that win a round, up to 500. 0 = no limit (the time limit ends the round)."
     },
     {
       "key": "kill_points",
@@ -111,25 +68,69 @@
   "options": [
     {
       "key": "rounds.teams",
-      "label": "Teams",
+      "label": "Teams enabled",
       "group": "Rounds",
       "type": "enum",
-      "default": 1,
-      "verified": true,
       "values": [
-        { "value": 0, "label": "Free for all" },
-        { "value": 1, "label": "Teams" }
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "default": 1,
+      "help": "Off plays free for all."
+    },
+    {
+      "key": "rounds.team_changing",
+      "label": "Team changing",
+      "group": "Rounds",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Disabled" },
+        { "value": 1, "label": "Enabled" },
+        { "value": 2, "label": "Balancing only" }
+      ],
+      "help": "What the game type allows. Dedicated servers apply it only with team_changing = \"game_type\"."
+    },
+    {
+      "key": "rounds.friendly_fire",
+      "label": "Friendly fire",
+      "group": "Rounds",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "help": "A server with friendly_fire = false protects teammates whatever this says."
+    },
+    {
+      "key": "rounds.betrayal_booting",
+      "label": "Betrayal booting",
+      "group": "Rounds",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
       ]
     },
     {
-      "key": "rounds.limit",
-      "label": "Number of rounds",
+      "key": "rounds.reset_players",
+      "label": "Reset players each round",
       "group": "Rounds",
-      "type": "int",
-      "min": 1,
-      "max": 15,
-      "default": 1,
-      "help": "Scores reset each round; the total decides the winner."
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "default": 1
+    },
+    {
+      "key": "rounds.reset_map",
+      "label": "Reset map each round",
+      "group": "Rounds",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ]
     },
     {
       "key": "rounds.minutes",
@@ -137,158 +138,1671 @@
       "group": "Rounds",
       "type": "int",
       "min": 0,
-      "max": 100,
-      "default": 10,
+      "max": 60,
       "unit": " min",
-      "help": "Minutes per round. 0 = no time limit."
+      "help": "Minutes per round. 0 = no time limit.",
+      "default": 10
     },
     {
-      "key": "rounds.reset_players",
-      "label": "Reset players each round",
+      "key": "rounds.limit",
+      "label": "Round limit",
       "group": "Rounds",
+      "type": "int",
+      "min": 1,
+      "max": 10,
+      "help": "Scores reset each round; the total decides the winner.",
+      "default": 1
+    },
+    {
+      "key": "rounds.early_victory",
+      "label": "Wins for early victory",
+      "group": "Rounds",
+      "type": "int",
+      "min": 0,
+      "max": 5,
+      "help": "Round wins that end the game early. 0 = off.",
+      "default": 0
+    },
+    { "key": "respawn.lives", "label": "Lives per round", "group": "Respawn", "type": "int", "min": 0, "max": 50, "help": "0 = unlimited.", "default": 0 },
+    { "key": "respawn.team_lives", "label": "Team lives", "group": "Respawn", "type": "int", "min": 0, "max": 100, "help": "0 = unlimited." },
+    { "key": "respawn.seconds", "label": "Respawn delay", "group": "Respawn", "type": "int", "min": 0, "max": 240, "unit": " s" },
+    { "key": "respawn.suicide", "label": "Suicide penalty", "group": "Respawn", "type": "int", "min": 0, "max": 240, "unit": " s" },
+    { "key": "respawn.betrayal", "label": "Betrayal penalty", "group": "Respawn", "type": "int", "min": 0, "max": 240, "unit": " s" },
+    { "key": "respawn.growth", "label": "Respawn growth", "group": "Respawn", "type": "int", "min": 0, "max": 15, "unit": " s" },
+    { "key": "respawn.traits_duration", "label": "Respawn traits duration", "group": "Respawn", "type": "int", "min": 0, "max": 60, "unit": " s" },
+    {
+      "key": "respawn.synchronize",
+      "label": "Synchronize with team",
+      "group": "Respawn",
       "type": "enum",
-      "default": 1,
-      "verified": false,
       "values": [
         { "value": 0, "label": "Off" },
         { "value": 1, "label": "On" }
       ]
     },
     {
-      "key": "rounds.early_victory",
-      "label": "Early victory win count",
-      "group": "Rounds",
-      "type": "int",
-      "min": 0,
-      "max": 15,
-      "default": 0,
-      "verified": false,
-      "help": "Round wins that end the game early. 0 = off."
-    },
-    {
-      "key": "respawn.lives",
-      "label": "Lives per round",
+      "key": "respawn.on_kills",
+      "label": "Respawn on kills",
       "group": "Respawn",
-      "type": "int",
-      "min": 0,
-      "max": 50,
-      "default": 0,
-      "help": "0 = unlimited."
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ]
     },
     {
       "key": "map.weapons",
-      "label": "Weapons on map",
+      "label": "Weapon set",
       "group": "Map",
       "type": "enum",
-      "default": 0,
-      "verified": true,
       "values": [
         { "value": 0, "label": "Default" },
-        { "value": 1, "label": "Assault rifles", "verified": false },
+        { "value": 1, "label": "Assault rifles" },
         { "value": 2, "label": "Dual wield" },
-        { "value": 3, "label": "Hammers", "verified": false },
-        { "value": 4, "label": "Lasers", "verified": false },
-        { "value": 5, "label": "Rockets", "verified": false },
+        { "value": 3, "label": "Hammers" },
+        { "value": 4, "label": "Lasers" },
+        { "value": 5, "label": "Rockets" },
         { "value": 6, "label": "Shotguns" },
         { "value": 7, "label": "Sniper rifles" },
-        { "value": 8, "label": "Swords", "verified": false },
-        { "value": 9, "label": "No power weapons", "verified": false },
-        { "value": 10, "label": "No snipers", "verified": false },
+        { "value": 8, "label": "Swords" },
+        { "value": 9, "label": "No power weapons" },
+        { "value": 10, "label": "No snipers" },
         { "value": 11, "label": "No weapons" },
-        { "value": 12, "label": "Random", "verified": false },
-        { "value": 13, "label": "ODST weapons", "verified": false }
+        { "value": 12, "label": "Random" },
+        { "value": 13, "label": "ODST weapons" }
       ],
-      "help": "The weapons placed on the map; Default keeps the map's own. Names and order are the server's (0.9.13). 0, 2, 6, 7 and 11 match Bungie's own variants; the rest follow the server's order."
+      "help": "The weapons placed on the map; Default keeps the map's own.",
+      "default": 0
     },
     {
       "key": "map.vehicles",
-      "label": "Vehicles on map",
+      "label": "Vehicle set",
       "group": "Map",
       "type": "enum",
-      "default": 0,
-      "verified": true,
       "values": [
         { "value": 0, "label": "Default" },
         { "value": 1, "label": "None" },
-        { "value": 2, "label": "Mongooses", "verified": false },
-        { "value": 3, "label": "Light ground", "verified": false },
-        { "value": 4, "label": "Tanks", "verified": false },
-        { "value": 5, "label": "Aircraft", "verified": false },
-        { "value": 6, "label": "No light ground", "verified": false },
-        { "value": 7, "label": "No tanks", "verified": false },
-        { "value": 8, "label": "No aircraft", "verified": false },
-        { "value": 9, "label": "All", "verified": false }
+        { "value": 2, "label": "Mongooses" },
+        { "value": 3, "label": "Light ground" },
+        { "value": 4, "label": "Tanks" },
+        { "value": 5, "label": "Aircraft" },
+        { "value": 6, "label": "No light ground" },
+        { "value": 7, "label": "No tanks" },
+        { "value": 8, "label": "No aircraft" },
+        { "value": 9, "label": "All" }
       ],
-      "help": "The vehicles placed on the map; Default keeps the map's own. Names and order are the server's (0.9.13); 0 and 1 are confirmed, the rest follow the server's order."
+      "help": "The vehicles placed on the map; Default keeps the map's own.",
+      "default": 0
     },
     {
-      "key": "player.primary_weapon",
-      "label": "Primary weapon",
-      "group": "Player",
+      "key": "map.grenades",
+      "label": "Grenades on map",
+      "group": "Map",
       "type": "enum",
-      "default": 0,
-      "values": "$startingWeapons",
-      "playlistFormat": "label"
+      "values": [
+        { "value": 0, "label": "None" },
+        { "value": 1, "label": "Map default" }
+      ]
     },
     {
-      "key": "player.secondary_weapon",
-      "label": "Secondary weapon",
+      "key": "map.indestructible_vehicles",
+      "label": "Indestructible vehicles",
+      "group": "Map",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ]
+    },
+    {
+      "key": "player.vehicles",
+      "label": "Vehicle use",
       "group": "Player",
       "type": "enum",
-      "default": -1,
-      "values": "$startingWeapons",
-      "playlistFormat": "label"
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "None" },
+        { "value": 2, "label": "Passenger only" },
+        { "value": 3, "label": "Full use" }
+      ]
     },
     {
       "key": "player.grenades",
       "label": "Starting grenades",
       "group": "Player",
       "type": "enum",
-      "default": 1,
-      "verified": true,
       "values": [
+        { "value": 0, "label": "Unchanged" },
         { "value": 1, "label": "Map default" },
         { "value": 2, "label": "None" }
-      ]
+      ],
+      "default": 1
+    },
+    {
+      "key": "player.primary_weapon",
+      "label": "Starting primary weapon",
+      "group": "Player",
+      "type": "enum",
+      "values": "$startingWeapons",
+      "playlistFormat": "label",
+      "default": 0
+    },
+    {
+      "key": "player.secondary_weapon",
+      "label": "Starting secondary weapon",
+      "group": "Player",
+      "type": "enum",
+      "values": "$startingWeapons",
+      "playlistFormat": "label",
+      "default": -1
     },
     {
       "key": "player.ammo",
-      "label": "Ammo",
+      "label": "Ammunition",
       "group": "Player",
       "type": "enum",
-      "default": 1,
-      "verified": true,
       "values": [
+        { "value": 0, "label": "Unchanged" },
         { "value": 1, "label": "Normal" },
         { "value": 2, "label": "Infinite" },
         { "value": 3, "label": "Bottomless clip" }
-      ]
+      ],
+      "default": 1
     },
     {
       "key": "player.pickup",
       "label": "Weapon pickup",
       "group": "Player",
       "type": "enum",
-      "default": 1,
-      "verified": true,
       "values": [
+        { "value": 0, "label": "Unchanged" },
         { "value": 1, "label": "Allowed" },
         { "value": 2, "label": "Disabled" }
-      ]
+      ],
+      "default": 1
     },
     {
       "key": "player.shields",
       "label": "Shields",
       "group": "Player",
       "type": "enum",
-      "default": 2,
-      "verified": true,
       "values": [
-        { "value": 1, "label": "No shields" },
-        { "value": 2, "label": "Normal shields" },
-        { "value": 3, "label": "2x overshields" },
-        { "value": 4, "label": "3x overshields" },
-        { "value": 5, "label": "4x overshields" }
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "None" },
+        { "value": 2, "label": "Normal" },
+        { "value": 3, "label": "2x" },
+        { "value": 4, "label": "3x" },
+        { "value": 5, "label": "4x" }
+      ],
+      "default": 2
+    },
+    {
+      "key": "player.resistance",
+      "label": "Damage resistance",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "10%" },
+        { "value": 2, "label": "50%" },
+        { "value": 3, "label": "90%" },
+        { "value": 4, "label": "100%" },
+        { "value": 5, "label": "110%" },
+        { "value": 6, "label": "150%" },
+        { "value": 7, "label": "200%" },
+        { "value": 8, "label": "300%" },
+        { "value": 9, "label": "500%" },
+        { "value": 10, "label": "1000%" },
+        { "value": 11, "label": "2000%" },
+        { "value": 12, "label": "Invulnerable" }
+      ]
+    },
+    {
+      "key": "player.recharge",
+      "label": "Shield recharge",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "-25%" },
+        { "value": 2, "label": "-10%" },
+        { "value": 3, "label": "-5%" },
+        { "value": 4, "label": "Disabled" },
+        { "value": 5, "label": "50%" },
+        { "value": 6, "label": "90%" },
+        { "value": 7, "label": "100%" },
+        { "value": 8, "label": "110%" },
+        { "value": 9, "label": "200%" }
+      ]
+    },
+    {
+      "key": "player.vampirism",
+      "label": "Vampirism",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Off" },
+        { "value": 2, "label": "10%" },
+        { "value": 3, "label": "25%" },
+        { "value": 4, "label": "50%" },
+        { "value": 5, "label": "100%" }
+      ]
+    },
+    {
+      "key": "player.headshots",
+      "label": "Headshot immunity",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Immune" },
+        { "value": 2, "label": "Vulnerable" }
+      ]
+    },
+    {
+      "key": "player.damage",
+      "label": "Damage dealt",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "0%" },
+        { "value": 2, "label": "25%" },
+        { "value": 3, "label": "50%" },
+        { "value": 4, "label": "75%" },
+        { "value": 5, "label": "90%" },
+        { "value": 6, "label": "100%" },
+        { "value": 7, "label": "110%" },
+        { "value": 8, "label": "125%" },
+        { "value": 9, "label": "150%" },
+        { "value": 10, "label": "200%" },
+        { "value": 11, "label": "300%" },
+        { "value": 12, "label": "Instant kill" }
+      ]
+    },
+    {
+      "key": "player.grenade_regeneration",
+      "label": "Grenade regeneration",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "On" },
+        { "value": 2, "label": "Off" },
+        { "value": 3, "label": "On, with firebombs" }
+      ]
+    },
+    {
+      "key": "player.speed",
+      "label": "Movement speed",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "25%" },
+        { "value": 2, "label": "50%" },
+        { "value": 3, "label": "75%" },
+        { "value": 4, "label": "90%" },
+        { "value": 5, "label": "100%" },
+        { "value": 6, "label": "110%" },
+        { "value": 7, "label": "125%" },
+        { "value": 8, "label": "150%" },
+        { "value": 9, "label": "200%" },
+        { "value": 10, "label": "300%" }
+      ]
+    },
+    {
+      "key": "player.gravity",
+      "label": "Player gravity",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "50%" },
+        { "value": 2, "label": "75%" },
+        { "value": 3, "label": "100%" },
+        { "value": 4, "label": "150%" },
+        { "value": 5, "label": "200%" }
+      ]
+    },
+    {
+      "key": "player.camouflage",
+      "label": "Camouflage",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Off" },
+        { "value": 2, "label": "Poor" },
+        { "value": 3, "label": "Good" },
+        { "value": 4, "label": "Invisible" }
+      ]
+    },
+    {
+      "key": "player.waypoint",
+      "label": "Waypoint",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Off" },
+        { "value": 2, "label": "Allies" },
+        { "value": 3, "label": "Everyone" }
+      ]
+    },
+    {
+      "key": "player.aura",
+      "label": "Aura",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Off" },
+        { "value": 2, "label": "Team color" },
+        { "value": 3, "label": "Black" },
+        { "value": 4, "label": "White" }
+      ]
+    },
+    {
+      "key": "player.forced_color",
+      "label": "Forced color",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Off" },
+        { "value": 2, "label": "Red" },
+        { "value": 3, "label": "Blue" },
+        { "value": 4, "label": "Green" },
+        { "value": 5, "label": "Orange" },
+        { "value": 6, "label": "Purple" },
+        { "value": 7, "label": "Gold" },
+        { "value": 8, "label": "Brown" },
+        { "value": 9, "label": "Pink" },
+        { "value": 10, "label": "White" },
+        { "value": 11, "label": "Black" },
+        { "value": 12, "label": "Zombie" }
+      ]
+    },
+    {
+      "key": "player.radar",
+      "label": "Motion tracker",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Off" },
+        { "value": 2, "label": "Allies only" },
+        { "value": 3, "label": "Normal" },
+        { "value": 4, "label": "Enhanced" }
+      ]
+    },
+    {
+      "key": "player.radar_range",
+      "label": "Motion tracker range",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "10 m" },
+        { "value": 2, "label": "15 m" },
+        { "value": 3, "label": "25 m" },
+        { "value": 4, "label": "50 m" },
+        { "value": 5, "label": "75 m" },
+        { "value": 6, "label": "100 m" },
+        { "value": 7, "label": "150 m" }
+      ]
+    },
+    {
+      "key": "player.camera",
+      "label": "Camera",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Third person" },
+        { "value": 2, "label": "First person" }
+      ],
+      "help": "From 0.9.18."
+    },
+    {
+      "key": "player.character_set",
+      "label": "Character set",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ],
+      "help": "From 0.9.18. Which characters play: Halo 3's own, a random one each life, or one of the character mods the game includes (the server's customization), in their order."
+    },
+    {
+      "key": "player.character",
+      "label": "Character",
+      "group": "Player",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ],
+      "help": "From 0.9.18. A character of the character set: the player's own choice, a random one each life, or a fixed one."
+    },
+    {
+      "key": "mode.suicide",
+      "label": "Suicide points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Juggernaut", "Infection", "VIP" ]
+    },
+    {
+      "key": "mode.betrayal",
+      "label": "Betrayal points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Juggernaut", "Infection", "VIP" ]
+    },
+    {
+      "key": "mode.team_scoring",
+      "label": "Team scoring",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Sum of team" },
+        { "value": 1, "label": "Minimum score" },
+        { "value": 2, "label": "Maximum score" }
+      ],
+      "modes": [ "Slayer", "Oddball", "King of the Hill" ],
+      "byMode": {
+        "King of the Hill": {
+          "values": [
+            { "value": 0, "label": "Sum of team" },
+            { "value": 1, "label": "Minimum score" },
+            { "value": 2, "label": "Maximum score" },
+            { "value": 3, "label": "Team control" }
+          ]
+        }
+      }
+    },
+    {
+      "key": "mode.kill",
+      "label": "Kill points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Oddball", "King of the Hill", "Juggernaut", "Infection", "VIP" ],
+      "byMode": {
+        "Infection": { "label": "Infected kill points" }
+      }
+    },
+    {
+      "key": "mode.assist",
+      "label": "Assist points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.leader_kill",
+      "label": "Leader kill bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.elimination",
+      "label": "Elimination bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.assassination",
+      "label": "Assassination bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.headshot",
+      "label": "Headshot bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.beatdown",
+      "label": "Beatdown bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.sticky",
+      "label": "Sticky bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.splatter",
+      "label": "Splatter bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.spree",
+      "label": "Spree bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "mode.flag_at_home",
+      "label": "Flag at home to score",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Capture the Flag" ]
+    },
+    {
+      "key": "mode.flag_waypoint",
+      "label": "Home flag waypoint",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Never" },
+        { "value": 1, "label": "When not carried by enemy" },
+        { "value": 2, "label": "Away from home" },
+        { "value": 3, "label": "Always" }
+      ],
+      "modes": [ "Capture the Flag" ]
+    },
+    {
+      "key": "mode.flag_type",
+      "label": "Flag type",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Multi flag" },
+        { "value": 1, "label": "One flag" },
+        { "value": 2, "label": "Neutral flag" }
+      ],
+      "modes": [ "Capture the Flag" ]
+    },
+    {
+      "key": "mode.objective_respawn",
+      "label": "Respawn on capture",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Normal" },
+        { "value": 1, "label": "On friendly capture" },
+        { "value": 2, "label": "On enemy capture" },
+        { "value": 3, "label": "On any capture" }
+      ],
+      "modes": [ "Capture the Flag", "Territories", "Assault" ],
+      "byMode": {
+        "Assault": {
+          "label": "Respawn on detonation",
+          "values": [
+            { "value": 0, "label": "Normal" },
+            { "value": 1, "label": "On friendly detonation" },
+            { "value": 2, "label": "On enemy detonation" },
+            { "value": 3, "label": "On any detonation" }
+          ]
+        }
+      }
+    },
+    {
+      "key": "mode.reset",
+      "label": "Flag reset",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 300,
+      "unit": " s",
+      "modes": [ "Capture the Flag", "Oddball", "Assault" ],
+      "byMode": {
+        "Oddball": { "label": "Ball reset", "min": 0, "max": 120 },
+        "Assault": { "label": "Bomb reset", "min": 0, "max": 60 }
+      }
+    },
+    {
+      "key": "mode.sudden_death",
+      "label": "Sudden death",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -1,
+      "max": 300,
+      "unit": " s",
+      "help": "-1 = unlimited.",
+      "modes": [ "Capture the Flag", "Territories", "Assault" ]
+    },
+    {
+      "key": "mode.touch_return",
+      "label": "Touch return",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -1,
+      "max": 300,
+      "unit": " s",
+      "help": "-1 = disabled.",
+      "modes": [ "Capture the Flag" ]
+    },
+    {
+      "key": "mode.auto_pickup",
+      "label": "Automatic ball pickup",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "mode.ball_effect",
+      "label": "Ball carrier effect",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "mode.carrying",
+      "label": "Carrying points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "mode.ball_kill",
+      "label": "Ball melee points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "mode.carrier_kill",
+      "label": "Carrier kill points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "mode.ball_count",
+      "label": "Ball count",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 1,
+      "max": 3,
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "mode.spawn_delay",
+      "label": "Ball spawn delay",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 120,
+      "modes": [ "Oddball" ],
+      "unit": " s"
+    },
+    {
+      "key": "mode.opaque_hill",
+      "label": "Opaque hill",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "mode.hill_movement",
+      "label": "Hill movement",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "10 seconds" },
+        { "value": 2, "label": "15 seconds" },
+        { "value": 3, "label": "30 seconds" },
+        { "value": 4, "label": "1 minute" },
+        { "value": 5, "label": "2 minutes" },
+        { "value": 6, "label": "3 minutes" },
+        { "value": 7, "label": "4 minutes" },
+        { "value": 8, "label": "5 minutes" }
+      ],
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "mode.hill_order",
+      "label": "Hill order",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Random" },
+        { "value": 1, "label": "Sequence" }
+      ],
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "mode.uncontested",
+      "label": "Uncontested bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "mode.inside",
+      "label": "Inside hill points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "mode.outside",
+      "label": "Outside hill points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "mode.destinations",
+      "label": "Destination zones",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Juggernaut", "VIP" ]
+    },
+    {
+      "key": "mode.destination_movement",
+      "label": "Destination movement",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "10 seconds" },
+        { "value": 2, "label": "15 seconds" },
+        { "value": 3, "label": "30 seconds" },
+        { "value": 4, "label": "1 minute" },
+        { "value": 5, "label": "2 minutes" },
+        { "value": 6, "label": "3 minutes" },
+        { "value": 7, "label": "4 minutes" },
+        { "value": 8, "label": "5 minutes" },
+        { "value": 9, "label": "On arrival" },
+        { "value": 10, "label": "On switch" }
+      ],
+      "modes": [ "Juggernaut", "VIP" ]
+    },
+    {
+      "key": "mode.destination_order",
+      "label": "Destination order",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Random" },
+        { "value": 1, "label": "Sequence" }
+      ],
+      "modes": [ "Juggernaut", "VIP" ]
+    },
+    {
+      "key": "mode.takedown",
+      "label": "Juggernaut kill points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Juggernaut", "VIP" ],
+      "byMode": {
+        "VIP": { "label": "VIP takedown points" }
+      }
+    },
+    {
+      "key": "mode.arrival",
+      "label": "Destination arrival points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Juggernaut", "Infection", "VIP" ],
+      "byMode": {
+        "Infection": { "label": "Safe haven arrival points" }
+      }
+    },
+    {
+      "key": "mode.allied_against_juggernaut",
+      "label": "Allied against Juggernaut",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "mode.respawn_on_lone_juggernaut",
+      "label": "Respawn when Juggernaut is alone",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "mode.initial_juggernaut",
+      "label": "Initial Juggernaut",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Random" },
+        { "value": 1, "label": "First kill" },
+        { "value": 2, "label": "First death" }
+      ],
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "mode.next_juggernaut",
+      "label": "Next Juggernaut",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Killer of Juggernaut" },
+        { "value": 1, "label": "Killed by Juggernaut" },
+        { "value": 2, "label": "Unchanged" },
+        { "value": 3, "label": "Random" }
+      ],
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "mode.juggernaut_kill",
+      "label": "Kill as Juggernaut points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "mode.juggernaut_delay",
+      "label": "Juggernaut delay",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 10,
+      "unit": " s",
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "mode.one_sided",
+      "label": "One-sided territories",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Territories" ]
+    },
+    {
+      "key": "mode.lock_on_capture",
+      "label": "Lock territories on capture",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Territories" ]
+    },
+    {
+      "key": "mode.capture",
+      "label": "Capture time",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 120,
+      "unit": " s",
+      "modes": [ "Territories" ]
+    },
+    {
+      "key": "mode.reset_on_disarm",
+      "label": "Reset bomb on disarm",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "mode.bomb_type",
+      "label": "Bomb type",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Multi bomb" },
+        { "value": 1, "label": "One bomb" },
+        { "value": 2, "label": "Neutral bomb" }
+      ],
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "mode.bomb_waypoint",
+      "label": "Enemy bomb waypoint",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Never" },
+        { "value": 1, "label": "When not carried by enemy" },
+        { "value": 2, "label": "When armed" },
+        { "value": 3, "label": "Always" }
+      ],
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "mode.arming",
+      "label": "Bomb arming",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 30,
+      "unit": " s",
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "mode.disarming",
+      "label": "Bomb disarming",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 30,
+      "unit": " s",
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "mode.fuse",
+      "label": "Bomb fuse",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 30,
+      "unit": " s",
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "mode.respawn_on_haven_move",
+      "label": "Respawn on safe haven movement",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.safe_havens",
+      "label": "Safe havens",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "Sequence" },
+        { "value": 2, "label": "Random" }
+      ],
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.next_infected",
+      "label": "Next infected",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Winner" },
+        { "value": 1, "label": "Loser" },
+        { "value": 2, "label": "Unchanged" },
+        { "value": 3, "label": "Random" }
+      ],
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.initial_count",
+      "label": "Initial infected count",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "25%" },
+        { "value": 1, "label": "50%" },
+        { "value": 2, "label": "1 player" },
+        { "value": 3, "label": "2 players" },
+        { "value": 4, "label": "3 players" },
+        { "value": 5, "label": "4 players" },
+        { "value": 6, "label": "5 players" },
+        { "value": 7, "label": "6 players" },
+        { "value": 8, "label": "7 players" },
+        { "value": 9, "label": "8 players" },
+        { "value": 10, "label": "9 players" },
+        { "value": 11, "label": "10 players" },
+        { "value": 12, "label": "11 players" },
+        { "value": 13, "label": "12 players" },
+        { "value": 14, "label": "13 players" },
+        { "value": 15, "label": "14 players" },
+        { "value": 16, "label": "15 players" }
+      ],
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.haven_seconds",
+      "label": "Safe haven movement",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 120,
+      "unit": " s",
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.infection",
+      "label": "Infection points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.last_survivor",
+      "label": "Last survivor bonus",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "mode.single_vip",
+      "label": "Single VIP",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "mode.end_on_vip_death",
+      "label": "End round on VIP death",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Off" },
+        { "value": 1, "label": "On" }
+      ],
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "mode.vip_selection",
+      "label": "VIP selection",
+      "group": "Mode rules",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Random" },
+        { "value": 1, "label": "Next respawn" },
+        { "value": 2, "label": "Next kill" },
+        { "value": 3, "label": "Unchanged" }
+      ],
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "mode.vip_kill",
+      "label": "Kill as VIP points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "mode.vip_death",
+      "label": "VIP death points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "mode.vip_suicide",
+      "label": "VIP betrayal points",
+      "group": "Mode rules",
+      "type": "int",
+      "min": -10,
+      "max": 10,
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "mode.radius",
+      "label": "VIP influence radius",
+      "group": "Mode rules",
+      "type": "int",
+      "min": 0,
+      "max": 50,
+      "modes": [ "VIP" ],
+      "unit": " m"
+    },
+    { "key": "powerups.red_duration", "label": "Red powerup duration", "group": "Powerups", "type": "int", "min": 0, "max": 120 },
+    { "key": "powerups.blue_duration", "label": "Blue powerup duration", "group": "Powerups", "type": "int", "min": 0, "max": 120 },
+    { "key": "powerups.yellow_duration", "label": "Yellow powerup duration", "group": "Powerups", "type": "int", "min": 0, "max": 120 },
+    {
+      "key": "teams.red_character_set",
+      "label": "Red team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ],
+      "help": "From 0.9.18. Gives each team its own character set in team games."
+    },
+    {
+      "key": "teams.red_character",
+      "label": "Red team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.blue_character_set",
+      "label": "Blue team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.blue_character",
+      "label": "Blue team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.green_character_set",
+      "label": "Green team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.green_character",
+      "label": "Green team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.orange_character_set",
+      "label": "Orange team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.orange_character",
+      "label": "Orange team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.purple_character_set",
+      "label": "Purple team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.purple_character",
+      "label": "Purple team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.gold_character_set",
+      "label": "Gold team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.gold_character",
+      "label": "Gold team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.brown_character_set",
+      "label": "Brown team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.brown_character",
+      "label": "Brown team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
+      ]
+    },
+    {
+      "key": "teams.pink_character_set",
+      "label": "Pink team's character set",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Unchanged" },
+        { "value": 1, "label": "Vanilla characters" },
+        { "value": 2, "label": "Random" },
+        { "value": 3, "label": "Customization mod 1" },
+        { "value": 4, "label": "Customization mod 2" },
+        { "value": 5, "label": "Customization mod 3" },
+        { "value": 6, "label": "Customization mod 4" },
+        { "value": 7, "label": "Customization mod 5" },
+        { "value": 8, "label": "Customization mod 6" },
+        { "value": 9, "label": "Customization mod 7" },
+        { "value": 10, "label": "Customization mod 8" },
+        { "value": 11, "label": "Customization mod 9" },
+        { "value": 12, "label": "Customization mod 10" },
+        { "value": 13, "label": "Customization mod 11" },
+        { "value": 14, "label": "Customization mod 12" },
+        { "value": 15, "label": "Customization mod 13" },
+        { "value": 16, "label": "Customization mod 14" },
+        { "value": 17, "label": "Customization mod 15" },
+        { "value": 18, "label": "Customization mod 16" }
+      ]
+    },
+    {
+      "key": "teams.pink_character",
+      "label": "Pink team's character",
+      "group": "Team characters",
+      "type": "enum",
+      "values": [
+        { "value": 0, "label": "Players" },
+        { "value": 1, "label": "Random" },
+        { "value": 2, "label": "Character 1" },
+        { "value": 3, "label": "Character 2" },
+        { "value": 4, "label": "Character 3" },
+        { "value": 5, "label": "Character 4" },
+        { "value": 6, "label": "Character 5" },
+        { "value": 7, "label": "Character 6" },
+        { "value": 8, "label": "Character 7" },
+        { "value": 9, "label": "Character 8" },
+        { "value": 10, "label": "Character 9" },
+        { "value": 11, "label": "Character 10" },
+        { "value": 12, "label": "Character 11" },
+        { "value": 13, "label": "Character 12" },
+        { "value": 14, "label": "Character 13" },
+        { "value": 15, "label": "Character 14" },
+        { "value": 16, "label": "Character 15" },
+        { "value": 17, "label": "Character 16" }
       ]
     }
   ],
@@ -328,313 +1842,123 @@
     { "value": 29, "label": "Golf club" }
   ],
   "scriptWeapons": [
-    {
-      "value": "assault_rifle",
-      "label": "Assault Rifle"
-    },
-    {
-      "value": "battle_rifle",
-      "label": "Battle Rifle"
-    },
-    {
-      "value": "smg",
-      "label": "SMG"
-    },
-    {
-      "value": "carbine",
-      "label": "Carbine"
-    },
-    {
-      "value": "magnum",
-      "label": "Magnum"
-    },
-    {
-      "value": "plasma_pistol",
-      "label": "Plasma Pistol"
-    },
-    {
-      "value": "plasma_rifle",
-      "label": "Plasma Rifle"
-    },
-    {
-      "value": "spiker",
-      "label": "Spiker"
-    },
-    {
-      "value": "needler",
-      "label": "Needler"
-    },
-    {
-      "value": "shotgun",
-      "label": "Shotgun"
-    },
-    {
-      "value": "sniper_rifle",
-      "label": "Sniper Rifle"
-    },
-    {
-      "value": "beam_rifle",
-      "label": "Beam Rifle"
-    },
-    {
-      "value": "rocket_launcher",
-      "label": "Rocket Launcher"
-    },
-    {
-      "value": "spartan_laser",
-      "label": "Spartan Laser"
-    },
-    {
-      "value": "brute_shot",
-      "label": "Brute Shot"
-    },
-    {
-      "value": "mauler",
-      "label": "Mauler"
-    },
-    {
-      "value": "energy_sword",
-      "label": "Energy Sword"
-    },
-    {
-      "value": "gravity_hammer",
-      "label": "Gravity Hammer"
-    },
-    {
-      "value": "sentinel_beam",
-      "label": "Sentinel Beam"
-    },
-    {
-      "value": "fuel_rod_gun",
-      "label": "Fuel Rod Gun"
-    },
-    {
-      "value": "flamethrower",
-      "label": "Flamethrower"
-    },
-    {
-      "value": "missile_pod",
-      "label": "Missile Pod"
-    },
-    {
-      "value": "machine_gun_turret",
-      "label": "Machine Gun Turret"
-    },
-    {
-      "value": "plasma_cannon",
-      "label": "Plasma Cannon"
-    }
+    { "value": "assault_rifle", "label": "Assault Rifle" },
+    { "value": "battle_rifle", "label": "Battle Rifle" },
+    { "value": "smg", "label": "SMG" },
+    { "value": "carbine", "label": "Carbine" },
+    { "value": "magnum", "label": "Magnum" },
+    { "value": "plasma_pistol", "label": "Plasma Pistol" },
+    { "value": "plasma_rifle", "label": "Plasma Rifle" },
+    { "value": "spiker", "label": "Spiker" },
+    { "value": "needler", "label": "Needler" },
+    { "value": "shotgun", "label": "Shotgun" },
+    { "value": "sniper_rifle", "label": "Sniper Rifle" },
+    { "value": "beam_rifle", "label": "Beam Rifle" },
+    { "value": "rocket_launcher", "label": "Rocket Launcher" },
+    { "value": "spartan_laser", "label": "Spartan Laser" },
+    { "value": "brute_shot", "label": "Brute Shot" },
+    { "value": "mauler", "label": "Mauler" },
+    { "value": "energy_sword", "label": "Energy Sword" },
+    { "value": "gravity_hammer", "label": "Gravity Hammer" },
+    { "value": "sentinel_beam", "label": "Sentinel Beam" },
+    { "value": "fuel_rod_gun", "label": "Fuel Rod Gun" },
+    { "value": "flamethrower", "label": "Flamethrower" },
+    { "value": "missile_pod", "label": "Missile Pod" },
+    { "value": "machine_gun_turret", "label": "Machine Gun Turret" },
+    { "value": "plasma_cannon", "label": "Plasma Cannon" }
   ],
   "traits": [
     {
       "key": "resistance",
       "label": "Damage resistance",
-      "values": [
-        "10%",
-        "50%",
-        "90%",
-        "100%",
-        "110%",
-        "150%",
-        "200%",
-        "300%",
-        "500%",
-        "1000%",
-        "2000%",
-        "Invulnerable"
-      ]
+      "values": [ "10%", "50%", "90%", "100%", "110%", "150%", "200%", "300%", "500%", "1000%", "2000%", "Invulnerable" ]
     },
     {
       "key": "recharge",
       "label": "Shield recharge",
-      "values": [
-        "-25%",
-        "-10%",
-        "-5%",
-        "Disabled",
-        "50%",
-        "90%",
-        "100%",
-        "110%",
-        "200%"
-      ]
+      "values": [ "-25%", "-10%", "-5%", "Disabled", "50%", "90%", "100%", "110%", "200%" ]
     },
     {
       "key": "vampirism",
       "label": "Shield vampirism",
-      "values": [
-        "Off",
-        "10%",
-        "25%",
-        "50%",
-        "100%"
-      ]
+      "values": [ "Off", "10%", "25%", "50%", "100%" ]
     },
     {
       "key": "headshots",
       "label": "Headshots",
-      "values": [
-        "Immune",
-        "Vulnerable"
-      ]
+      "values": [ "Immune", "Vulnerable" ]
     },
     {
       "key": "shields",
       "label": "Shields",
-      "values": [
-        "None",
-        "Normal",
-        "2x",
-        "3x",
-        "4x"
-      ]
+      "values": [ "None", "Normal", "2x", "3x", "4x" ]
     },
     {
       "key": "damage",
       "label": "Damage",
-      "values": [
-        "0%",
-        "25%",
-        "50%",
-        "75%",
-        "90%",
-        "100%",
-        "110%",
-        "125%",
-        "150%",
-        "200%",
-        "300%",
-        "Instant kill"
-      ]
+      "values": [ "0%", "25%", "50%", "75%", "90%", "100%", "110%", "125%", "150%", "200%", "300%", "Instant kill" ]
     },
     {
       "key": "grenade_regeneration",
       "label": "Grenade regeneration",
-      "values": [
-        "Off",
-        "On"
-      ]
+      "values": [ "Off", "On" ]
     },
     {
       "key": "ammo",
       "label": "Ammo",
-      "values": [
-        "Normal",
-        "Infinite",
-        "Bottomless clip"
-      ]
+      "values": [ "Normal", "Infinite", "Bottomless clip" ]
     },
     {
       "key": "pickup",
       "label": "Weapon pickup",
-      "values": [
-        "Allowed",
-        "Disabled"
-      ]
+      "values": [ "Allowed", "Disabled" ]
     },
     {
       "key": "speed",
       "label": "Movement speed",
-      "values": [
-        "25%",
-        "50%",
-        "75%",
-        "90%",
-        "100%",
-        "110%",
-        "125%",
-        "150%",
-        "200%",
-        "300%"
-      ]
+      "values": [ "25%", "50%", "75%", "90%", "100%", "110%", "125%", "150%", "200%", "300%" ]
     },
     {
       "key": "gravity",
       "label": "Gravity",
-      "values": [
-        "50%",
-        "75%",
-        "100%",
-        "150%",
-        "200%"
-      ]
+      "values": [ "50%", "75%", "100%", "150%", "200%" ]
     },
     {
       "key": "vehicles",
       "label": "Vehicle use",
-      "values": [
-        "None",
-        "Passenger only",
-        "Full use"
-      ]
+      "values": [ "None", "Passenger only", "Full use" ]
     },
     {
       "key": "camouflage",
       "label": "Active camo",
-      "values": [
-        "Off",
-        "Poor",
-        "Good",
-        "Invisible"
-      ]
+      "values": [ "Off", "Poor", "Good", "Invisible" ]
     },
     {
       "key": "waypoint",
       "label": "Waypoint",
-      "values": [
-        "Off",
-        "Allies",
-        "Everyone"
-      ]
+      "values": [ "Off", "Allies", "Everyone" ]
     },
     {
       "key": "aura",
       "label": "Aura",
-      "values": [
-        "Off",
-        "Team color",
-        "Black",
-        "White"
-      ]
+      "values": [ "Off", "Team color", "Black", "White" ]
     },
     {
       "key": "radar",
       "label": "Motion tracker",
-      "values": [
-        "Off",
-        "Moving players",
-        "All players",
-        "Allies"
-      ]
+      "values": [ "Off", "Moving players", "All players", "Allies" ]
     },
     {
       "key": "radar_range",
       "label": "Tracker range",
-      "values": [
-        "10 m",
-        "15 m",
-        "25 m",
-        "50 m",
-        "75 m",
-        "100 m",
-        "150 m"
-      ]
+      "values": [ "10 m", "15 m", "25 m", "50 m", "75 m", "100 m", "150 m" ]
     }
   ],
   "script": {
     "events": [
-      {
-        "value": "on_spawn",
-        "label": "When a player spawns"
-      },
-      {
-        "value": "on_kill",
-        "label": "When a player kills an enemy"
-      },
-      {
-        "value": "on_death",
-        "label": "When a player dies"
-      }
+      { "value": "on_spawn", "label": "When a player spawns" },
+      { "value": "on_kill", "label": "When a player kills an enemy" },
+      { "value": "on_death", "label": "When a player dies" }
     ],
     "conditions": [
       {
@@ -645,37 +1969,20 @@
       {
         "value": "not_melee",
         "label": "Only if the kill wasn't a melee strike",
-        "when": [
-          "kill.melee",
-          0,
-          "=="
-        ],
-        "events": [
-          "on_kill",
-          "on_death"
-        ]
+        "when": [ "kill.melee", 0, "==" ],
+        "events": [ "on_kill", "on_death" ]
       },
       {
         "value": "melee",
         "label": "Only melee-strike kills",
-        "when": [
-          "kill.melee"
-        ],
-        "events": [
-          "on_kill",
-          "on_death"
-        ]
+        "when": [ "kill.melee" ],
+        "events": [ "on_kill", "on_death" ]
       },
       {
         "value": "assassination",
         "label": "Only kills from behind",
-        "when": [
-          "kill.assassination"
-        ],
-        "events": [
-          "on_kill",
-          "on_death"
-        ]
+        "when": [ "kill.assassination" ],
+        "events": [ "on_kill", "on_death" ]
       }
     ],
     "actions": [
@@ -712,53 +2019,103 @@
         "default": 1,
         "unit": "x"
       },
-      {
-        "op": "weapon",
-        "label": "Give weapon",
-        "field": "weapon",
-        "type": "weapon"
-      },
-      {
-        "op": "ammo",
-        "label": "Set ammo",
-        "field": "value",
-        "type": "int",
-        "min": 0,
-        "max": 999,
-        "default": 1
-      },
-      {
-        "op": "add_ammo",
-        "label": "Add ammo",
-        "field": "value",
-        "type": "int",
-        "min": 0,
-        "max": 999,
-        "default": 1
-      },
-      {
-        "op": "lethal",
-        "label": "One-hit kills",
-        "field": "enabled",
-        "type": "bool",
-        "default": true
-      },
-      {
-        "op": "score",
-        "label": "Give points",
-        "field": "value",
-        "type": "int",
-        "min": -100,
-        "max": 100,
-        "default": 1
-      },
-      {
-        "op": "traits",
-        "label": "Set player traits",
-        "field": "values",
-        "type": "traits",
-        "version": 2
-      }
+      { "op": "weapon", "label": "Give weapon", "field": "weapon", "type": "weapon" },
+      { "op": "ammo", "label": "Set ammo", "field": "value", "type": "int", "min": 0, "max": 999, "default": 1 },
+      { "op": "add_ammo", "label": "Add ammo", "field": "value", "type": "int", "min": 0, "max": 999, "default": 1 },
+      { "op": "lethal", "label": "One-hit kills", "field": "enabled", "type": "bool", "default": true },
+      { "op": "score", "label": "Give points", "field": "value", "type": "int", "min": -100, "max": 100, "default": 1 },
+      { "op": "traits", "label": "Set player traits", "field": "values", "type": "traits", "version": 2 }
     ]
-  }
+  },
+  "traitSets": [
+    { "key": "respawn_traits", "label": "Respawn traits", "help": "Traits for the first seconds after spawning (Respawn → traits duration)." },
+    {
+      "key": "leader",
+      "label": "Leader",
+      "help": "Traits of the player or team in the lead.",
+      "modes": [ "Slayer" ]
+    },
+    {
+      "key": "flag_carrier",
+      "label": "Flag carrier",
+      "modes": [ "Capture the Flag" ]
+    },
+    {
+      "key": "ball_carrier",
+      "label": "Ball carrier",
+      "modes": [ "Oddball" ]
+    },
+    {
+      "key": "hill_occupant",
+      "label": "In the hill",
+      "help": "Traits of players standing in the hill.",
+      "modes": [ "King of the Hill" ]
+    },
+    {
+      "key": "juggernaut",
+      "label": "Juggernaut",
+      "modes": [ "Juggernaut" ]
+    },
+    {
+      "key": "defender",
+      "label": "Defenders",
+      "modes": [ "Territories" ]
+    },
+    {
+      "key": "attacker",
+      "label": "Attackers",
+      "modes": [ "Territories" ]
+    },
+    {
+      "key": "bomb_carrier",
+      "label": "Bomb carrier",
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "bomb_arming",
+      "label": "Arming a bomb",
+      "modes": [ "Assault" ]
+    },
+    {
+      "key": "infected",
+      "label": "Infected",
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "initial_infected",
+      "label": "First infected",
+      "help": "Traits of the players infected at the start of a round.",
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "last_survivor",
+      "label": "Last survivor",
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "safe_haven",
+      "label": "In a safe haven",
+      "modes": [ "Infection" ]
+    },
+    {
+      "key": "vip",
+      "label": "VIP",
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "vip_team",
+      "label": "VIP's team",
+      "modes": [ "VIP" ]
+    },
+    {
+      "key": "vip_proximity",
+      "label": "Near the VIP",
+      "help": "Traits of the VIP's teammates within its influence radius.",
+      "modes": [ "VIP" ]
+    },
+    { "key": "red_powerup", "label": "Red powerup", "help": "Traits a red powerup gives (Powerups → red powerup duration)." },
+    { "key": "blue_powerup", "label": "Blue powerup", "help": "Traits a blue powerup gives." },
+    { "key": "yellow_powerup", "label": "Yellow powerup", "help": "Traits a yellow powerup gives." }
+  ],
+  "_traitSets": "Each trait set takes every player.* trait under its own key, e.g. flag_carrier.speed; catalog.js expands them. 'modes' as for options."
 }

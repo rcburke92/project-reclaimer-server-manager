@@ -71,22 +71,28 @@ export function gametypeChoices() {
   ];
 }
 
-/** { name, kind: 'base'|'bundled'|'mine'|'other', known } for a reference. */
+/**
+ * { name, kind: 'base'|'bundled'|'mine'|'other', known, mode } for a reference.
+ * mode is the base mode it plays (as findBaseMode takes it), or null when unknown.
+ */
 export function describeGametype(ref) {
   const r = String(ref || '');
   const lower = r.toLowerCase();
   const base = catalog.baseModes.find((m) => m.value.toLowerCase() === lower);
-  if (base) return { name: base.label, kind: 'base', known: true };
+  if (base) return { name: base.label, kind: 'base', known: true, mode: base.value };
+  // The bundled modes are all scripted Slayer.
   const bundled = catalog.bundledModes.find((n) => n.toLowerCase() === lower);
-  if (bundled) return { name: bundled, kind: 'bundled', known: true };
+  if (bundled) return { name: bundled, kind: 'bundled', known: true, mode: 'Slayer' };
   const file = /^game modes\/(.+)$/i.exec(r);
   if (file) {
     const g = mine.find((x) => x.file.toLowerCase() === file[1].toLowerCase());
-    return g ? { name: g.name, kind: 'mine', known: true, file: g.file } : { name: file[1], kind: 'mine', known: false, file: file[1] };
+    return g
+      ? { name: g.name, kind: 'mine', known: true, file: g.file, mode: g.mode || 'Slayer' }
+      : { name: file[1], kind: 'mine', known: false, file: file[1], mode: null };
   }
   const byName = mine.find((x) => x.name.toLowerCase() === lower);
-  if (byName) return { name: byName.name, kind: 'mine', known: true, file: byName.file };
-  return { name: r, kind: 'other', known: false };
+  if (byName) return { name: byName.name, kind: 'mine', known: true, file: byName.file, mode: byName.mode || 'Slayer' };
+  return { name: r, kind: 'other', known: false, mode: null };
 }
 
 /** Workspace game type files a set of references uses (for export). */

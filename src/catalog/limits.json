@@ -5,9 +5,10 @@
     "maxGames": 128,
     "maxModMaps": 23,
     "maxMods": 16,
+    "maxImages": 32,
     "voteSeconds": [5, 120],
     "weight": [1, 100]
   },
   "gametype": { "nameMax": 48 },
-  "server": { "nameMax": 48, "portRange": [1024, 65535], "maxPlayers": [1, 63], "maxWorkshopItems": 64, "rconPassword": [8, 128] }
+  "server": { "nameMax": 48, "portRange": [1024, 65535], "maxPlayers": [1, 127], "campaignMaxPlayers": 16, "maxWorkshopItems": 64, "rconPassword": [8, 128], "welcomeLines": 5, "welcomeLineMax": 300 }
 }

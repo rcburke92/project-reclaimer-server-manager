@@ -1,7 +1,7 @@
 {
   "name": "halo3-server-manager",
   "productName": "Halo 3 Server Manager",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Build game types, playlists and server config for a Project Reclaimer Halo 3 dedicated server.",
   "main": "src/main/main.js",
   "private": true,

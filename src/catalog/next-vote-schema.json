@@ -1,0 +1,15 @@
+{
+  "_about": "next-vote.toml, read by the Pterodactyl egg's reclaimer-next-vote.py (not by Project Reclaimer itself). An admin starts a vote with !nextvote in chat or nextvote in the panel console; the winner is queued with RCON nextmap. Types follow src/renderer/lib/settings-form.js.",
+  "fields": [
+    { "key": "vote_seconds", "label": "Vote time", "type": "int", "min": 15, "max": 300, "default": 60, "slider": true, "unit": " s",
+      "help": "How long players have to answer. Reminders with the standings go out at 30 and 10 seconds." },
+    { "key": "choices_per_vote", "label": "Games per vote", "type": "int", "min": 0, "max": 9, "default": 4,
+      "help": "How many games of the list each vote offers, drawn at random. 0 offers them all (up to 9)." }
+  ],
+  "choice": [
+    { "key": "name", "label": "Name", "type": "string", "maxLength": 60, "default": "", "placeholder": "e.g. Snipers on Valhalla",
+      "help": "What players read in chat. Empty: \"<game> on <map>\"." }
+  ],
+  "minChoices": 2,
+  "maxPerVote": 9
+}

@@ -116,11 +116,11 @@ function checkSection() {
 function finishSection(p) {
   const modIds = p.mods.filter((m) => m.installed && m.referenced).map((m) => m.id);
   return h('div.panel.card',
-    h('div.panel-header', '4 · Restart and record'),
+    h('div.panel-header', '4 · Apply and record'),
     h('div.panel-body',
       h('ol.steps',
-        h('li', 'Restart the server from the Pterodactyl panel: servers read playlists, game types and mods when they start.'),
-        h('li', 'Watch the console for "dedicated check passed: starting Project Reclaimer". Anything missing is named just above that line.'),
+        h('li', 'From Project Reclaimer 0.9.18, running servers apply an uploaded dedicated.toml, playlists, game types and maps by themselves a couple of seconds later, without dropping players. The console prints "Configuration reloaded." with what changed, or what is wrong (then nothing changes). With auto_reload = false, type reload in the panel console.'),
+        h('li', 'Restart the server from the Pterodactyl panel after adding or updating mods, or when changing the folders. Ports, RCON, hidden, chat log, anti-cheat, VPN blocking and character mods restart that server by themselves once it has no players.'),
         h('li', 'Then record this upload, so next time only what changed is marked.')),
       h('div', { style: { display: 'flex', gap: '10px', marginTop: '12px' } },
         h('button.btn.primary', {
