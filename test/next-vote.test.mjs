@@ -29,6 +29,14 @@ test('a usable list passes, and problems are named', () => {
   ]);
 });
 
+test('an ODST first server is named, since the vote can\'t queue games on it', () => {
+  const list = { choice: [{ map: 'Guardian', game: 'Slayer' }, { map: 'Valhalla', game: 'Slayer' }] };
+  const odst = { server: [{ name: 'FF', port: 49176, rcon_password: 'longenough', odst: { mode: 'firefight', mission: 6100, insertion: 4 } }] };
+  assert.deepStrictEqual(texts(validateNextVote(list, odst)), [
+    'warning: The first server plays Halo 3: ODST, whose game the console can\'t change: the vote won\'t start on it',
+  ]);
+});
+
 test('choice labels match what the egg posts in chat', () => {
   assert.strictEqual(choiceLabel({ map: 'Guardian', game: 'Gun Game' }), 'Gun Game on Guardian');
   assert.strictEqual(choiceLabel({ map: 'Guardian', game: 'Slayer', name: ' Guardian FFA ' }), 'Guardian FFA');

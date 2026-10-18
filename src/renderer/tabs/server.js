@@ -25,6 +25,7 @@ const PLAYS = [
   { value: 'map', label: 'Map + game' },
   { value: 'variant', label: 'Variant' },
   { value: 'campaign', label: 'Campaign co-op' },
+  { value: 'odst', label: 'Halo 3: ODST' },
 ];
 
 let pane;
@@ -60,8 +61,8 @@ export function validateServerConfig(data) {
       if (ports.has(s.port)) issues.push({ level: 'error', text: `Two servers use port ${s.port}` });
       ports.set(s.port, i);
     }
-    const plays = ['playlist', 'map', 'variant', 'campaign'].filter((k) => s[k]);
-    if (plays.length > 1) issues.push({ level: 'error', text: `${label}: choose only one of playlist, map + game, variant or campaign` });
+    const plays = ['playlist', 'map', 'variant', 'campaign', 'odst'].filter((k) => s[k]);
+    if (plays.length > 1) issues.push({ level: 'error', text: `${label}: choose only one of playlist, map + game, variant, campaign or ODST` });
     if (s.map && !s.game) issues.push({ level: 'error', text: `${label}: a map needs a game type` });
     // A server's own setting wins over [defaults]; the server checks the result.
     const eff = (k) => (k in s ? s[k] : data.defaults?.[k]);
@@ -70,6 +71,19 @@ export function validateServerConfig(data) {
       if (!s.campaign.mission) issues.push({ level: 'error', text: `${label}: a campaign server needs a mission` });
       if (maxPlayers > LIM.campaignMaxPlayers) issues.push({ level: 'error', text: `${label}: a campaign server takes at most ${LIM.campaignMaxPlayers} players (max players is ${maxPlayers})` });
       if (s.base_map || s.game) issues.push({ level: 'error', text: `${label}: a campaign server can't also have a game or base map` });
+    }
+    if (s.odst) {
+      const o = s.odst;
+      if (!o.mission) issues.push({ level: 'error', text: `${label}: an ODST server needs a mission or Firefight map` });
+      else if (o.mode === 'firefight') {
+        if (!S.odst.firefightMaps.some((m) => m.mission === o.mission && m.insertion === (o.insertion ?? 0))) issues.push({ level: 'error', text: `${label}: no Firefight map is mission ${o.mission}, insertion ${o.insertion ?? 0}` });
+      } else {
+        const m = S.odst.missions.find((x) => x.value === o.mission);
+        if (!m) issues.push({ level: 'error', text: `${label}: ${o.mission} isn't an ODST campaign mission` });
+        else if ((o.insertion ?? 0) > m.insertions) issues.push({ level: 'error', text: `${label}: ${m.label} starts from 0 to ${m.insertions}` });
+      }
+      if (maxPlayers > LIM.campaignMaxPlayers) issues.push({ level: 'error', text: `${label}: an ODST server takes at most ${LIM.campaignMaxPlayers} players (max players is ${maxPlayers})` });
+      if (s.base_map || s.game) issues.push({ level: 'error', text: `${label}: an ODST server can't also have a game or base map` });
     }
     if ((eff('min_players') ?? 1) > maxPlayers) issues.push({ level: 'error', text: `${label}: min players (${eff('min_players')}) is over max players (${maxPlayers})` });
     const welcome = linesOf(eff('welcome'));
@@ -117,6 +131,7 @@ function sectionCard(title, body, { open = true, note } = {}) {
 
 function playsOf(s) {
   if (s.campaign) return 'campaign';
+  if (s.odst) return 'odst';
   if (s.playlist) return 'playlist';
   if (s.map || s.game) return 'map';
   if (s.variant) return 'variant';
@@ -130,6 +145,16 @@ function playsSummary(s) {
   if (s.campaign) {
     const mission = S.campaign.fields[0].values.find((m) => m.value === s.campaign.mission);
     return `Campaign: ${mission?.label || s.campaign.mission || '?'}, ${s.campaign.difficulty || 'normal'}`;
+  }
+  if (s.odst) {
+    const o = s.odst;
+    if (o.mode === 'firefight') {
+      const map = S.odst.firefightMaps.find((m) => m.mission === o.mission && m.insertion === (o.insertion ?? 0));
+      const variant = S.odst.variants.find((v) => v.value === o.variant);
+      return `ODST Firefight: ${map?.label || '?'}, ${variant?.label || o.variant || 'Firefight'}, ${o.difficulty || 'normal'}`;
+    }
+    const mission = S.odst.missions.find((m) => m.value === o.mission);
+    return `ODST: ${mission?.label || o.mission || '?'}, ${o.difficulty || 'normal'}`;
   }
   return 'Slayer on Guardian (no playlist, map or variant set)';
 }
@@ -163,6 +188,48 @@ function campaignForm(c, changed) {
     h('div.help', 'The server needs every mission it plays: run dedicated init --from --maps campaign and upload game/. It goes on to the next mission it has, and after the last starts again from this one.'));
 }
 
+/** odst = { mode, mission, insertion, variant, difficulty, modifiers = { … } } of one server (0.9.19+). */
+function odstForm(o, changed, redrawPlays) {
+  const O = S.odst;
+  const difficulty = S.campaign.fields.find((f) => f.key === 'difficulty');
+  const firefight = o.mode === 'firefight';
+  const reset = (next) => { for (const k of Object.keys(o)) delete o[k]; Object.assign(o, next); redrawPlays(); changed(); };
+  const mode = h('div.segmented',
+    h('button', { class: firefight ? '' : 'active', onclick: () => reset({ mission: O.missions[1].value }) }, 'Campaign'),
+    h('button', { class: firefight ? 'active' : '', onclick: () => reset({ mode: 'firefight', mission: O.firefightMaps[0].mission, insertion: O.firefightMaps[0].insertion }) }, 'Firefight'));
+  const fields = [];
+  if (firefight) {
+    // A Firefight map is a mission + insertion pair.
+    const key = (m) => `${m.mission}:${m.insertion}`;
+    const map = h('select.select', { style: { minWidth: '280px' }, onchange: () => { const m = O.firefightMaps.find((x) => key(x) === map.value); o.mission = m.mission; o.insertion = m.insertion; changed(); } },
+      O.firefightMaps.map((m) => h('option', { value: key(m), selected: m.mission === o.mission && m.insertion === (o.insertion ?? 0) }, m.label)));
+    const variant = h('select.select', { style: { minWidth: '280px' }, onchange: () => { if (variant.value) o.variant = variant.value; else delete o.variant; changed(); } },
+      h('option', { value: '', selected: !o.variant }, 'Default (the game type called Firefight)'),
+      O.variants.map((v) => h('option', { value: v.value, selected: v.value === o.variant }, `${v.label}  ·  ${v.value}`)));
+    fields.push(h('div.field', h('label', 'Map'), map), h('div.field', h('label', 'Game type'), variant));
+  } else {
+    const current = O.missions.find((m) => m.value === o.mission);
+    const mission = h('select.select', { style: { minWidth: '280px' }, onchange: () => { o.mission = Number(mission.value); delete o.insertion; redrawPlays(); changed(); } },
+      O.missions.map((m) => h('option', { value: m.value, selected: m.value === o.mission }, m.label)));
+    fields.push(h('div.field', h('label', 'Mission'), mission));
+    if (current?.insertions) {
+      const start = h('select.select', { onchange: () => { const v = Number(start.value); if (v) o.insertion = v; else delete o.insertion; changed(); } },
+        Array.from({ length: current.insertions + 1 }, (_, i) => h('option', { value: i, selected: i === (o.insertion ?? 0) }, i ? `Rally point ${i}` : 'Start of the mission')));
+      fields.push(h('div.field', h('label', 'Start from'), start));
+    }
+  }
+  // modifiers is written only while one is set, as in campaignForm.
+  const modifiers = o.modifiers || {};
+  const tidyModifiers = () => { if (Object.keys(modifiers).length) o.modifiers = modifiers; else delete o.modifiers; };
+  return h('div.campaign-form',
+    h('div.field', h('label', 'Mode'), mode),
+    fields,
+    h('div.flush', toggleRows([difficulty], o, changed)),
+    firefight ? null : h('div.section-title', 'Modifiers', h('span.dim', '(off = the game\'s own)')),
+    firefight ? null : h('div.flush', toggleRows(S.campaign.modifiers, modifiers, () => { tidyModifiers(); changed(); })),
+    h('div.help', O.help));
+}
+
 function serverCard(data, s, index, redraw, docChanged) {
   // Every change also refreshes the card's one-line summary.
   const changed = () => { updateHead(); docChanged(); };
@@ -180,6 +247,16 @@ function serverCard(data, s, index, redraw, docChanged) {
     if (kind === 'campaign') {
       s.campaign = { mission: 3010 };
       // A campaign server takes at most 16 players; redraw so the row shows it.
+      if ((s.max_players ?? data.defaults?.max_players ?? 16) > LIM.campaignMaxPlayers) {
+        s.max_players = LIM.campaignMaxPlayers;
+        redraw();
+        changed();
+        return;
+      }
+    }
+    if (kind === 'odst') {
+      s.odst = { mission: S.odst.missions[1].value };
+      // An ODST server takes at most 16 players too.
       if ((s.max_players ?? data.defaults?.max_players ?? 16) > LIM.campaignMaxPlayers) {
         s.max_players = LIM.campaignMaxPlayers;
         redraw();
@@ -206,6 +283,8 @@ function serverCard(data, s, index, redraw, docChanged) {
         h('div.field', h('label', 'Game type'), selectWithGroups(gametypeChoices(), s.game, (v) => { s.game = v; changed(); })));
     } else if (kind === 'campaign') {
       picker = campaignForm(s.campaign, changed);
+    } else if (kind === 'odst') {
+      picker = odstForm(s.odst, changed, drawPlays);
     } else if (kind === 'variant') {
       picker = gametypes.length
         ? selectWithGroups(gametypes.map((g) => ({ value: `content/Game Modes/${g.file}`, label: g.name })), s.variant, (v) => { s.variant = v; changed(); })
@@ -282,7 +361,7 @@ function createEditor(doc, docHost) {
     const defaultFields = S.serverFields.filter((f) => !f.perServerOnly);
     render(root,
       h('div.readonly-banner', icon('info'),
-        h('span', 'Egg variables filled in on the Pterodactyl panel override the settings outside [[server]] blocks: the general settings, [rcon], [master] and the [defaults] below (max and min players, voice, chat, welcome, friendly fire, team changing, anti-cheat, VPNs, ping, load timeout, mods sharing, …). Leave them empty in the panel to use this file.')),
+        h('span', 'Egg variables filled in on the Pterodactyl panel override the settings outside [[server]] blocks: the general settings, [rcon], [master] and the [defaults] below (max and min players, voice, chat, welcome, friendly fire, team changing, camera, anti-cheat, VPNs, ping, load timeout, mods sharing, …). Leave them empty in the panel to use this file.')),
       h('div.section-title', 'Servers', h('span.dim', `(${data.server.length})`)),
       data.server.map((s, i) => serverCard(data, s, i, draw, changed)),
       h('div.add-row', h('button.btn.primary', {

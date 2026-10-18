@@ -33,6 +33,8 @@ export function validateNextVote(data, dedicated) {
   if (dedicated && !first?.rcon_password && !dedicated.rcon?.password) {
     warning('The vote works through RCON: set an RCON password in dedicated.toml, or the egg\'s RCON Password variable');
   }
+  // From 0.9.19 an ODST server refuses nextmap, and the egg won't start a vote on one.
+  if (first?.odst) warning('The first server plays Halo 3: ODST, whose game the console can\'t change: the vote won\'t start on it');
   return issues;
 }
 

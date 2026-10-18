@@ -129,6 +129,20 @@ test('campaign inline tables are written, changed and removed in place', () => {
   assert.strictEqual(plain(out).server[1].map, 'Guardian');
 });
 
+test('odst inline tables and camera are written in place', () => {
+  const plain = (t) => JSON.parse(JSON.stringify(parseToml(t)));
+  const d = plain(SAMPLE);
+  d.server[1] = { name: 'ODST', port: 49177, max_players: 8, camera: 'player_choice', odst: { mode: 'firefight', mission: 5000, insertion: 7, variant: 'odst_ff_classic', difficulty: 'heroic' } };
+  let out = patchToml(SAMPLE, d);
+  assert.match(out, /^odst = \{ mode = "firefight", mission = 5000, insertion = 7, variant = "odst_ff_classic", difficulty = "heroic" \}$/m);
+  assert.match(out, /^camera = "player_choice"$/m);
+  assert.deepStrictEqual(plain(out).server[1].odst, d.server[1].odst);
+
+  d.server[1].odst = { mission: 6100, insertion: 2, modifiers: { health_percent: 150 } };
+  out = patchToml(out, d);
+  assert.deepStrictEqual(plain(out).server[1].odst, { mission: 6100, insertion: 2, modifiers: { health_percent: 150 } });
+});
+
 test('welcome takes one line or a list', () => {
   const d = JSON.parse(JSON.stringify(parseToml(SAMPLE)));
   d.defaults.welcome = 'Welcome to {server}, {name}!';
