@@ -63,7 +63,9 @@
       "table": "vpn",
       "title": "VPN blocking [vpn]",
       "fields": [
-        { "key": "lists", "label": "Block lists", "type": "list", "default": ["default"], "placeholder": "default, https://…, my-ranges.txt", "help": "Networks VPN blocking refuses. Your own lists replace the defaults; include \"default\" to add to them." }
+        { "key": "lists", "label": "Block lists", "type": "list", "default": ["default"], "placeholder": "default, https://…, my-ranges.txt", "help": "Networks VPN blocking refuses. Your own lists replace the defaults; include \"default\" to add to them." },
+        {"key": "asns", "label": "Block networks (ASN)", "type": "list", "default": [], "placeholder": "AS64500, AS64501", "help": "From 0.9.22. Hosting networks refused as a whole, by their AS number. dedicated vpn check <IP> names the network behind an address."},
+        {"key": "fail_closed", "label": "Refuse while no list", "type": "bool", "default": false, "help": "From 0.9.22. On: while the server has no VPN list yet, it refuses everyone but admins and allowed players. Off admits everyone and logs VPN block NOT WORKING."}
       ]
     }
   ],
@@ -115,11 +117,30 @@
       { "key": "health_percent", "label": "Enemy health", "type": "int", "min": 25, "max": 1000, "step": 25, "default": 100, "unit": " %" },
       { "key": "damage_percent", "label": "Enemy damage", "type": "int", "min": 25, "max": 1000, "step": 25, "default": 100, "unit": " %" },
       { "key": "health_per_player_percent", "label": "Enemy health per player", "type": "int", "min": 0, "max": 100, "step": 5, "default": 0, "unit": " %" },
-      { "key": "damage_per_player_percent", "label": "Enemy damage per player", "type": "int", "min": 0, "max": 100, "step": 5, "default": 0, "unit": " %" }
+      { "key": "damage_per_player_percent", "label": "Enemy damage per player", "type": "int", "min": 0, "max": 100, "step": 5, "default": 0, "unit": " %" },
+      {"key": "sprint", "label": "Sprint", "type": "bool", "default": false, "help": "From 0.9.19. Every player sprints by holding Sprint while running forward, with a stamina meter."},
+      {"key": "sprint_speed_percent", "label": "Sprint speed", "type": "int", "min": 110, "max": 200, "step": 10, "default": 150, "unit": " %"},
+      {"key": "sprint_stamina_seconds", "label": "Sprint stamina", "type": "int", "min": 0, "max": 30, "default": 5, "unit": " s", "help": "How long a full meter lasts. 0 is unlimited."}
+    ],
+    "skulls": [
+      {"key": "iron", "label": "Iron", "value": 1},
+      {"key": "black_eye", "label": "Black Eye", "value": 2},
+      {"key": "tough_luck", "label": "Tough Luck", "value": 4},
+      {"key": "catch", "label": "Catch", "value": 8},
+      {"key": "fog", "label": "Fog", "value": 16},
+      {"key": "famine", "label": "Famine", "value": 32},
+      {"key": "thunderstorm", "label": "Thunderstorm", "value": 64},
+      {"key": "tilt", "label": "Tilt", "value": 128},
+      {"key": "mythic", "label": "Mythic", "value": 256},
+      {"key": "assassin", "label": "Assassin", "value": 512, "silver": true},
+      {"key": "blind", "label": "Blind", "value": 1024, "silver": true},
+      {"key": "cowbell", "label": "Cowbell", "value": 2048, "silver": true},
+      {"key": "grunt_birthday_party", "label": "Grunt Birthday Party", "value": 4096, "silver": true},
+      {"key": "iwhbyd", "label": "IWHBYD", "value": 8192, "silver": true}
     ]
   },
   "odst": {
-    "_about": "odst = { … } in a [[server]] block (0.9.19+): Halo 3: ODST campaign or Firefight in co-op. Lists from `dedicated content odst` (0.9.20); unknown keys in it are ignored by the server.",
+    "_about": "odst = { … } in a [[server]] block (0.9.19+): Halo 3: ODST campaign or Firefight in co-op. Lists from `dedicated content odst` and Firefight option names and ranges from `dedicated check` (0.9.22). From 0.9.21 a wrong option, modifier or value stops the server; unknown top-level keys in odst are still ignored.",
     "missions": [
       {"value": 4100, "label": "Prepare to Drop", "insertions": 0},
       {"value": 5000, "label": "Mombasa Streets", "insertions": 6},
@@ -174,6 +195,232 @@
       {"value": "odst_ff_splocketattack_1round", "label": "Splocket Attack"},
       {"value": "odst_ff_scoreattack_1round", "label": "Score Attack"}
     ],
-    "help": "The server needs ODST's files: run dedicated init --from --maps odst (about 3.5 GB) on a PC with ODST installed and upload game/. Players need ODST installed in MCC. The console can't change an ODST server's game, so the egg's next-game vote doesn't work on one."
+    "storyCharacters": {"key": "story_characters", "label": "Story characters", "type": "bool", "default": false, "help": "From 0.9.21. On: everyone plays the mission's own characters (the Rookie in the city, Buck, Dutch, Mickey or Romeo in their flashbacks) instead of their own trooper."},
+    "firefightOptions": {
+      "fields": [
+        {
+          "key": "firefight.team_lives",
+          "label": "Team lives",
+          "type": "int",
+          "min": -1,
+          "max": 25,
+          "default": 7,
+          "help": "The lives the team starts with. -1 is unlimited."
+        },
+        {
+          "key": "firefight.max_lives",
+          "label": "Most lives",
+          "type": "int",
+          "min": 1,
+          "max": 50,
+          "default": 50,
+          "help": "The most lives the team may hold."
+        },
+        {
+          "key": "firefight.minutes",
+          "label": "Time limit",
+          "type": "int",
+          "min": 0,
+          "max": 120,
+          "default": 0,
+          "unit": " min",
+          "help": "0 is no limit."
+        }
+      ],
+      "skullScopes": [
+        {
+          "prefix": "skulls",
+          "label": "Whole game"
+        },
+        {
+          "prefix": "round_1_skulls",
+          "label": "Round 1"
+        },
+        {
+          "prefix": "round_2_skulls",
+          "label": "Round 2"
+        },
+        {
+          "prefix": "round_3_skulls",
+          "label": "Round 3"
+        },
+        {
+          "prefix": "set_1_skulls",
+          "label": "Set 1"
+        },
+        {
+          "prefix": "set_2_skulls",
+          "label": "Set 2"
+        },
+        {
+          "prefix": "set_3_skulls",
+          "label": "Set 3"
+        },
+        {
+          "prefix": "later_set_skulls",
+          "label": "Set 4 on"
+        },
+        {
+          "prefix": "bonus_skulls",
+          "label": "Bonus round"
+        }
+      ],
+      "traits": [
+        {
+          "key": "player.shields",
+          "label": "Shields",
+          "type": "int",
+          "min": 0,
+          "max": 5,
+          "default": 0
+        },
+        {
+          "key": "player.recharge",
+          "label": "Shield recharge",
+          "type": "int",
+          "min": 0,
+          "max": 9,
+          "default": 0
+        },
+        {
+          "key": "player.resistance",
+          "label": "Damage resistance",
+          "type": "int",
+          "min": 0,
+          "max": 12,
+          "default": 0
+        },
+        {
+          "key": "player.headshots",
+          "label": "Headshot immunity",
+          "type": "int",
+          "min": 0,
+          "max": 2,
+          "default": 0
+        },
+        {
+          "key": "player.vampirism",
+          "label": "Vampirism",
+          "type": "int",
+          "min": 0,
+          "max": 5,
+          "default": 0
+        },
+        {
+          "key": "player.damage",
+          "label": "Damage dealt",
+          "type": "int",
+          "min": 0,
+          "max": 12,
+          "default": 0
+        },
+        {
+          "key": "player.ammo",
+          "label": "Ammunition",
+          "type": "int",
+          "min": 0,
+          "max": 3,
+          "default": 0
+        },
+        {
+          "key": "player.grenades",
+          "label": "Starting grenades",
+          "type": "int",
+          "min": 0,
+          "max": 2,
+          "default": 0
+        },
+        {
+          "key": "player.grenade_regeneration",
+          "label": "Grenade regeneration",
+          "type": "int",
+          "min": 0,
+          "max": 3,
+          "default": 0
+        },
+        {
+          "key": "player.pickup",
+          "label": "Weapon pickup",
+          "type": "int",
+          "min": 0,
+          "max": 2,
+          "default": 0
+        },
+        {
+          "key": "player.speed",
+          "label": "Movement speed",
+          "type": "int",
+          "min": 0,
+          "max": 10,
+          "default": 0
+        },
+        {
+          "key": "player.gravity",
+          "label": "Player gravity",
+          "type": "int",
+          "min": 0,
+          "max": 5,
+          "default": 0
+        },
+        {
+          "key": "player.vehicles",
+          "label": "Vehicle use",
+          "type": "int",
+          "min": 0,
+          "max": 3,
+          "default": 0
+        },
+        {
+          "key": "player.camouflage",
+          "label": "Camouflage",
+          "type": "int",
+          "min": 0,
+          "max": 4,
+          "default": 0
+        },
+        {
+          "key": "player.radar",
+          "label": "Motion tracker",
+          "type": "int",
+          "min": 0,
+          "max": 4,
+          "default": 0
+        },
+        {
+          "key": "player.radar_range",
+          "label": "Motion tracker range",
+          "type": "int",
+          "min": 0,
+          "max": 7,
+          "default": 0
+        },
+        {
+          "key": "player.waypoint",
+          "label": "Waypoint",
+          "type": "int",
+          "min": 0,
+          "max": 3,
+          "default": 0
+        },
+        {
+          "key": "player.aura",
+          "label": "Aura",
+          "type": "int",
+          "min": 0,
+          "max": 4,
+          "default": 0
+        },
+        {
+          "key": "player.forced_color",
+          "label": "Forced color",
+          "type": "int",
+          "min": 0,
+          "max": 12,
+          "default": 0
+        }
+      ],
+      "traitsHelp": "Each trait is the number of its choice as Firefight Options lists it in the game, counting from 0 for Unchanged. The starting weapons aren't listed here."
+    },
+    "help": "The server needs ODST's files: run dedicated init --from --maps odst (about 3.5 GB) on a PC with ODST installed and upload game/. Players need ODST installed in MCC. From 0.9.21 the console switches it between missions and Firefight maps, so the egg's next-game vote works on it."
   }
 }

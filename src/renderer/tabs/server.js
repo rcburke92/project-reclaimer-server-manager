@@ -34,6 +34,7 @@ let fileInfo = null;
 let reservedInfo = null;
 let nextVoteInfo = null;
 let updateReservedSummary = null;
+let refreshNextVote = null;
 let playlists = [];
 let gametypes = [];
 const bodyHost = h('div.server-body');
@@ -82,6 +83,11 @@ export function validateServerConfig(data) {
         if (!m) issues.push({ level: 'error', text: `${label}: ${o.mission} isn't an ODST campaign mission` });
         else if ((o.insertion ?? 0) > m.insertions) issues.push({ level: 'error', text: `${label}: ${m.label} starts from 0 to ${m.insertions}` });
       }
+      // From 0.9.21 the server refuses these instead of ignoring them.
+      if (o.mode === 'firefight' && o.modifiers) issues.push({ level: 'error', text: `${label}: Firefight takes no modifiers; use its options` });
+      if (o.mode === 'firefight' && o.story_characters) issues.push({ level: 'error', text: `${label}: Firefight's players are their own troopers (story characters is campaign only)` });
+      if (o.mode !== 'firefight' && o.options) issues.push({ level: 'error', text: `${label}: an ODST campaign has no Firefight options` });
+      if (o.modifiers?.third_person !== undefined) issues.push({ level: 'error', text: `${label}: third person is Halo 3's only, not ODST's` });
       if (maxPlayers > LIM.campaignMaxPlayers) issues.push({ level: 'error', text: `${label}: an ODST server takes at most ${LIM.campaignMaxPlayers} players (max players is ${maxPlayers})` });
       if (s.base_map || s.game) issues.push({ level: 'error', text: `${label}: an ODST server can't also have a game or base map` });
     }
@@ -159,7 +165,7 @@ function playsSummary(s) {
   return 'Slayer on Guardian (no playlist, map or variant set)';
 }
 
-function selectWithGroups(choices, value, onChange, { placeholder } = {}) {
+function selectWithGroups(choices, value, onChange, { placeholder, missing = 'not in workspace' } = {}) {
   const groups = [...new Set(choices.map((c) => c.group || ''))];
   const sel = h('select.select', { style: { minWidth: '280px' }, onchange: () => onChange(sel.value) },
     placeholder ? h('option', { value: '', selected: !value, disabled: true }, placeholder) : null,
@@ -168,23 +174,75 @@ function selectWithGroups(choices, value, onChange, { placeholder } = {}) {
       return g ? h('optgroup', { label: g }, opts) : opts;
     }));
   if (value && !choices.some((c) => String(c.value).toLowerCase() === String(value).toLowerCase())) {
-    sel.prepend(h('option', { value, selected: true }, `${value} (not in workspace)`));
+    sel.prepend(h('option', { value, selected: true }, `${value} (${missing})`));
   }
   return sel;
 }
 
+/** modifiers.skulls as checkboxes: one number, the sum of the skulls that are on (0.9.19+). */
+function skullsPicker(modifiers, changed) {
+  const on = (k) => ((modifiers.skulls || 0) & k.value) !== 0;
+  const toggle = (k, checked) => {
+    const v = checked ? (modifiers.skulls || 0) | k.value : (modifiers.skulls || 0) & ~k.value;
+    if (v) modifiers.skulls = v; else delete modifiers.skulls;
+    changed();
+  };
+  return h('div.skull-grid', S.campaign.skulls.map((k) => {
+    const box = h('input', { type: 'checkbox', checked: on(k), onchange: () => toggle(k, box.checked) });
+    return h('label.skull', { class: k.silver ? 'silver' : 'gold' }, box, h('span', k.label));
+  }));
+}
+
+/** Campaign modifiers, Halo 3's or ODST's: rows, then the skulls. modifiers is written only while one is set. */
+function modifiersSection(owner, changed) {
+  const modifiers = owner.modifiers || {};
+  const tidy = () => { if (Object.keys(modifiers).length) owner.modifiers = modifiers; else delete owner.modifiers; changed(); };
+  return [
+    h('div.section-title', 'Modifiers', h('span.dim', '(off = the game\'s own)')),
+    h('div.flush', toggleRows(S.campaign.modifiers, modifiers, tidy)),
+    h('div.section-title', 'Skulls', h('span.dim', '(gold, then silver)')),
+    skullsPicker(modifiers, tidy),
+  ];
+}
+
+/** Firefight's options = { "firefight.team_lives" = 3, "skulls.famine" = 1, "player.shields" = 2, … } (0.9.21+). */
+function firefightOptions(o, changed) {
+  const F = S.odst.firefightOptions;
+  const options = o.options || {};
+  const tidy = () => { if (Object.keys(options).length) o.options = options; else delete o.options; changed(); };
+  // Off = the game type's own, which the app can't read.
+  const own = () => undefined;
+  const skullCell = (scope, k) => {
+    const key = `${scope.prefix}.${k.key}`;
+    const sel = h('select.select.small', {
+      title: `${k.label}, ${scope.label.toLowerCase()}`,
+      onchange: () => { if (sel.value === '') delete options[key]; else options[key] = Number(sel.value); tidy(); },
+    },
+    h('option', { value: '', selected: !(key in options) }, '·'),
+    h('option', { value: '1', selected: options[key] === 1 }, 'On'),
+    h('option', { value: '0', selected: options[key] === 0 }, 'Off'));
+    return h('td', sel);
+  };
+  return [
+    h('div.section-title', 'Firefight options', h('span.dim', '(off = the game type\'s own)')),
+    h('div.flush', toggleRows(F.fields, options, tidy, own)),
+    h('div.section-title', 'Skulls', h('span.dim', '(· = the game type\'s own)')),
+    h('div.skull-table-wrap', h('table.skull-table',
+      h('thead', h('tr', h('th', ''), F.skullScopes.map((sc) => h('th', sc.label)))),
+      h('tbody', S.campaign.skulls.map((k) => h('tr', h('th', k.label), F.skullScopes.map((sc) => skullCell(sc, k))))))),
+    h('div.section-title', 'Player traits', h('span.dim', '(off = the game type\'s own)')),
+    h('div.flush', toggleRows(F.traits, options, tidy, own)),
+    h('div.help', F.traitsHelp),
+  ];
+}
+
 /** campaign = { mission, insertion, difficulty, custom_characters, modifiers = { … } } of one server. */
 function campaignForm(c, changed) {
-  const rows = (fields, obj, clean) => toggleRows(fields, obj, () => { clean?.(); changed(); });
-  // modifiers is written only while one is set.
-  const modifiers = c.modifiers || {};
-  const tidyModifiers = () => { if (Object.keys(modifiers).length) c.modifiers = modifiers; else delete c.modifiers; };
   const [mission, ...rest] = S.campaign.fields;
   return h('div.campaign-form',
     h('div.field', h('label', 'Mission'), control(mission, c.mission, (v) => { c.mission = v; changed(); })),
-    h('div.flush', rows(rest, c)),
-    h('div.section-title', 'Modifiers', h('span.dim', '(off = the game\'s own)')),
-    h('div.flush', rows(S.campaign.modifiers, modifiers, tidyModifiers)),
+    h('div.flush', toggleRows(rest, c, changed)),
+    modifiersSection(c, changed),
     h('div.help', 'The server needs every mission it plays: run dedicated init --from --maps campaign and upload game/. It goes on to the next mission it has, and after the last starts again from this one.'));
 }
 
@@ -218,15 +276,12 @@ function odstForm(o, changed, redrawPlays) {
       fields.push(h('div.field', h('label', 'Start from'), start));
     }
   }
-  // modifiers is written only while one is set, as in campaignForm.
-  const modifiers = o.modifiers || {};
-  const tidyModifiers = () => { if (Object.keys(modifiers).length) o.modifiers = modifiers; else delete o.modifiers; };
+  // Firefight takes options and no modifiers or story characters; a campaign the reverse.
   return h('div.campaign-form',
     h('div.field', h('label', 'Mode'), mode),
     fields,
-    h('div.flush', toggleRows([difficulty], o, changed)),
-    firefight ? null : h('div.section-title', 'Modifiers', h('span.dim', '(off = the game\'s own)')),
-    firefight ? null : h('div.flush', toggleRows(S.campaign.modifiers, modifiers, () => { tidyModifiers(); changed(); })),
+    h('div.flush', toggleRows(firefight ? [difficulty] : [difficulty, O.storyCharacters], o, changed)),
+    firefight ? firefightOptions(o, changed) : modifiersSection(o, changed),
     h('div.help', O.help));
 }
 
@@ -408,6 +463,23 @@ function createReservedEditor(doc, docHost) {
 
 // ---------------------------------------------------------------- next-vote.toml
 
+/** The first server's odst = { … }, if it plays Halo 3: ODST: the vote then picks ODST games. */
+function firstServerOdst() {
+  return host?.find('dedicated')?.current?.server?.[0]?.odst || null;
+}
+
+// What the console's maps and modes call them (0.9.21+), which nextmap takes.
+function odstMapChoices() {
+  return [
+    ...S.odst.missions.map((m) => ({ value: m.label, label: m.label, group: 'Campaign missions' })),
+    ...S.odst.firefightMaps.map((m) => ({ value: m.label, label: m.label, group: 'Firefight maps' })),
+  ];
+}
+
+function odstGameChoices() {
+  return [{ value: '', label: 'None (for a mission)' }, ...S.odst.variants.map((v) => ({ value: v.value, label: v.label }))];
+}
+
 function mapChoices() {
   return allMaps().map((m) => ({ value: m.ref, label: m.kind === 'stock' ? m.name : `${m.name} (${m.sub})`, group: m.kind === 'stock' ? 'Stock maps' : m.kind === 'mod' ? 'Mod maps' : 'Saved maps' }));
 }
@@ -419,6 +491,8 @@ function createNextVoteEditor(doc, docHost) {
 
   function drawList() {
     const choices = data.choice || [];
+    const odst = !!firstServerOdst();
+    const label = (c) => (c.game ? `${c.game} on ${c.map}` : c.map);
     const remove = (i) => {
       choices.splice(i, 1);
       if (!choices.length) delete data.choice; // no bare "choice = []" in the file
@@ -430,18 +504,18 @@ function createNextVoteEditor(doc, docHost) {
         ? h('div.summary-empty', 'No games yet. Add at least two.')
         : choices.map((c, i) => {
           const name = h('input.input', {
-            value: c.name || '', maxLength: NV.choice[0].maxLength, placeholder: `${c.game} on ${c.map}`, style: { width: '100%' },
+            value: c.name || '', maxLength: NV.choice[0].maxLength, placeholder: label(c), style: { width: '100%' },
             onchange: () => { const v = name.value.trim(); if (v) c.name = v; else delete c.name; changed(); },
           });
           return h('div.next-vote-choice',
             name,
-            selectWithGroups(mapChoices(), c.map, (v) => { c.map = v; name.placeholder = `${c.game} on ${c.map}`; changed(); }),
-            selectWithGroups(gametypeChoices(), c.game, (v) => { c.game = v; name.placeholder = `${c.game} on ${c.map}`; changed(); }),
+            selectWithGroups(odst ? odstMapChoices() : mapChoices(), c.map, (v) => { c.map = v; name.placeholder = label(c); changed(); }, odst ? { missing: 'not an ODST game' } : {}),
+            selectWithGroups(odst ? odstGameChoices() : gametypeChoices(), c.game || '', (v) => { if (v) c.game = v; else delete c.game; name.placeholder = label(c); changed(); }, odst ? { missing: 'not a Firefight game type' } : {}),
             h('button.icon-btn.small.danger', { title: 'Remove', onclick: () => remove(i) }, icon('trash')));
         }),
       h('div.add-row', h('button.btn', {
         onclick: () => {
-          (data.choice ||= []).push({ map: 'Guardian', game: 'Slayer' });
+          (data.choice ||= []).push(odst ? { map: S.odst.firefightMaps[0].label, game: S.odst.variants[0].value } : { map: 'Guardian', game: 'Slayer' });
           drawList();
           changed();
         },
@@ -449,9 +523,12 @@ function createNextVoteEditor(doc, docHost) {
   }
 
   drawList();
+  // Redraw when the first server switches between Halo 3 and ODST (not on every edit, which would steal focus).
+  let drawnOdst = !!firstServerOdst();
+  refreshNextVote = () => { const odst = !!firstServerOdst(); if (odst !== drawnOdst) { drawnOdst = odst; drawList(); } };
   return h('div.editor',
     h('div.readonly-banner', icon('info'),
-      h('span', 'For the Pterodactyl egg: an admin types !nextvote in game chat (or nextvote in the panel console), players answer with a number, and the winning game plays after the current one, instead of the playlist\'s ballot. Works on the first [[server]], through RCON. Saved edits apply at the next vote.')),
+      h('span', 'For the Pterodactyl egg: an admin types !nextvote in game chat (or nextvote in the panel console), players answer with a number, and the winning game plays after the current one, instead of the playlist\'s ballot. Works on the first [[server]], through RCON; when it plays Halo 3: ODST (Project Reclaimer 0.9.21 or later), the games are ODST\'s missions and Firefight maps. Saved edits apply at the next vote.')),
     sectionCard('Vote', toggleRows(NV.fields, data, changed), { open: true }),
     sectionCard('Games to choose from', h('div.panel-body', h('div.next-vote-choice.head', h('span', 'Name players read'), h('span', 'Map'), h('span', 'Game type'), h('span')), listHost), { open: true, note: 'Each vote draws its games at random from these' }));
 }
@@ -513,7 +590,7 @@ function draw() {
         fileInfo = await window.api.server.write(doc.current);
         return 'dedicated';
       },
-      onChange: () => { updateReservedSummary?.(); events.emit('status'); },
+      onChange: () => { updateReservedSummary?.(); refreshNextVote?.(); events.emit('status'); },
     });
   } else {
     // Pick up changes made outside the app, in documents without unsaved edits.

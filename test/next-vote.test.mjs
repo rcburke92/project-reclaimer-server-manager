@@ -29,17 +29,24 @@ test('a usable list passes, and problems are named', () => {
   ]);
 });
 
-test('an ODST first server is named, since the vote can\'t queue games on it', () => {
-  const list = { choice: [{ map: 'Guardian', game: 'Slayer' }, { map: 'Valhalla', game: 'Slayer' }] };
+test('on an ODST first server, games are ODST missions and Firefight maps', () => {
   const odst = { server: [{ name: 'FF', port: 49176, rcon_password: 'longenough', odst: { mode: 'firefight', mission: 6100, insertion: 4 } }] };
-  assert.deepStrictEqual(texts(validateNextVote(list, odst)), [
-    'warning: The first server plays Halo 3: ODST, whose game the console can\'t change: the vote won\'t start on it',
+  const ok = { choice: [{ map: 'Tayari Plaza' }, { map: 'Crater (Night)', game: 'odst_ff_rocketfight_1set' }, { map: 'Last Exit', game: 'Rocketfight' }] };
+  assert.deepStrictEqual(validateNextVote(ok, odst), []);
+  const wrong = { choice: [{ map: 'Guardian', game: 'Slayer' }, { map: 'Data Hive', game: 'Rocketfight' }] };
+  assert.deepStrictEqual(texts(validateNextVote(wrong, odst)), [
+    'warning: Game 1: "Guardian" isn\'t an ODST mission or Firefight map, which the first server plays',
+    'warning: Game 1: "Slayer" isn\'t a Firefight game type',
+    'warning: Game 2: Data Hive is a mission, which takes no game type',
   ]);
+  // A Halo 3 server still needs a game type.
+  assert.deepStrictEqual(texts(validateNextVote({ choice: [{ map: 'Guardian' }, { map: 'Valhalla', game: 'Slayer' }] }, dedicated)), ['error: Game 1 has no game type']);
 });
 
 test('choice labels match what the egg posts in chat', () => {
   assert.strictEqual(choiceLabel({ map: 'Guardian', game: 'Gun Game' }), 'Gun Game on Guardian');
   assert.strictEqual(choiceLabel({ map: 'Guardian', game: 'Slayer', name: ' Guardian FFA ' }), 'Guardian FFA');
+  assert.strictEqual(choiceLabel({ map: 'Tayari Plaza' }), 'Tayari Plaza');
 });
 
 test('[[choice]] tables are written into a new file and removed again', () => {

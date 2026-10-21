@@ -200,3 +200,12 @@ code { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 12px; color
 .next-vote-choice { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(200px, 280px) minmax(200px, 280px) 32px; gap: 10px; align-items: center; padding: 6px 0; }
 .next-vote-choice.head { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; padding-top: 0; }
 .next-vote-choice .select { min-width: 0 !important; width: 100%; }
+.skull-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 14px; padding: 6px 0 10px; }
+.skull { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+.skull.silver span { color: var(--text-dim); }
+.skull-table-wrap { overflow-x: auto; padding: 4px 0 10px; }
+.skull-table { border-collapse: collapse; font-size: 12px; }
+.skull-table th { text-align: left; font-weight: normal; color: var(--text-dim); padding: 2px 8px 2px 0; white-space: nowrap; }
+.skull-table thead th { text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.skull-table td { padding: 2px 4px; }
+.skull-table .select { min-width: 0 !important; width: 62px; padding: 2px 4px; }

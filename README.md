@@ -4,7 +4,7 @@ A desktop app for building the files a [Project Reclaimer](https://projectreclai
 
 - **Game types:** scoring, every game option the server takes for the base mode (objective rules, trait sets, powerups, …) and simple script events.
 - **Playlists:** maps (stock, Workshop mod and saved Forge maps), game types, weights and per-entry options, sprint, vote images and team voice, with the server's limits checked as you go.
-- **Server:** `dedicated.toml` as forms, campaign co-op and Halo 3: ODST campaign or Firefight servers included (Project Reclaimer 0.9.19+), and the camera setting (0.9.20). Your comments and layout are kept. Two more documents set up the egg's helpers: `reserved-slots.toml` (reserved slots for whitelisted players) and `next-vote.toml` (the games an admin's `!nextvote` lets players choose the next game from).
+- **Server:** `dedicated.toml` as forms, campaign co-op and Halo 3: ODST campaign or Firefight servers included (Project Reclaimer 0.9.19+) with their skulls, sprint and Firefight options (0.9.21), the camera setting (0.9.20) and VPN blocking by network (0.9.22). Your comments and layout are kept. Two more documents set up the egg's helpers: `reserved-slots.toml` (reserved slots for whitelisted players) and `next-vote.toml` (the games an admin's `!nextvote` lets players choose the next game from, ODST missions and Firefight maps included).
 - **Mods:** an embedded Steam Workshop filtered to Halo 3, plus a list of the Halo 3 mods you're subscribed to, read from Steam's files on this PC. Each mod shows exactly which folder to copy to the server.
 - **Export:** a checklist of what to upload to the server, what's changed since last time, and which mods your playlists need.
 

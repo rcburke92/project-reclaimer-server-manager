@@ -138,9 +138,15 @@ test('odst inline tables and camera are written in place', () => {
   assert.match(out, /^camera = "player_choice"$/m);
   assert.deepStrictEqual(plain(out).server[1].odst, d.server[1].odst);
 
-  d.server[1].odst = { mission: 6100, insertion: 2, modifiers: { health_percent: 150 } };
+  d.server[1].odst = { mission: 6100, insertion: 2, story_characters: true, modifiers: { health_percent: 150, skulls: 33, sprint: true } };
   out = patchToml(out, d);
-  assert.deepStrictEqual(plain(out).server[1].odst, { mission: 6100, insertion: 2, modifiers: { health_percent: 150 } });
+  assert.deepStrictEqual(plain(out).server[1].odst, d.server[1].odst);
+
+  // Firefight options hold dots in their names, so they are quoted.
+  d.server[1].odst = { mode: 'firefight', mission: 6100, insertion: 4, options: { 'firefight.team_lives': -1, 'round_2_skulls.iwhbyd': 1, 'player.shields': 2 } };
+  out = patchToml(out, d);
+  assert.match(out, /options = \{ "firefight\.team_lives" = -1, "round_2_skulls\.iwhbyd" = 1, "player\.shields" = 2 \}/);
+  assert.deepStrictEqual(plain(out).server[1].odst, d.server[1].odst);
 });
 
 test('welcome takes one line or a list', () => {

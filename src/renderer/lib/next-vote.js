@@ -1,5 +1,11 @@
 // next-vote.toml checks. No DOM here, so tests can import it.
 import schema from '../../catalog/next-vote-schema.json' with { type: 'json' };
+import server from '../../catalog/server-schema.json' with { type: 'json' };
+
+// The names an ODST server's maps and modes list, which its nextmap takes (0.9.21+).
+const ODST_MAPS = new Set([...server.odst.missions, ...server.odst.firefightMaps].map((m) => m.label.toLowerCase()));
+const ODST_MISSIONS = new Set(server.odst.missions.map((m) => m.label.toLowerCase()));
+const ODST_GAMES = new Set(server.odst.variants.flatMap((v) => [v.value, v.label]).map((n) => n.toLowerCase()));
 
 /** Issues for next-vote.toml, checked against dedicated.toml when it's given. */
 export function validateNextVote(data, dedicated) {
@@ -15,11 +21,19 @@ export function validateNextVote(data, dedicated) {
     if (v !== undefined && (!Number.isInteger(v) || v < f.min || v > f.max)) error(`${f.label} must be ${f.min} to ${f.max}`);
   }
   if (choices.length < schema.minChoices) error(`List at least ${schema.minChoices} games`);
+  const first = dedicated?.server?.[0];
+  const odst = !!first?.odst;
   const seen = new Set();
   choices.forEach((c, i) => {
-    if (!String(c.map || '').trim()) error(`Game ${i + 1} has no map`);
-    if (!String(c.game || '').trim()) error(`Game ${i + 1} has no game type`);
-    const key = `${String(c.map).toLowerCase()}|${String(c.game).toLowerCase()}`;
+    const map = String(c.map || '').trim().toLowerCase();
+    const game = String(c.game || '').trim().toLowerCase();
+    if (!map) error(`Game ${i + 1} has no map`);
+    // An ODST mission has no game type; the egg leaves it out of nextmap.
+    if (!game && !odst) error(`Game ${i + 1} has no game type`);
+    if (odst && map && !ODST_MAPS.has(map)) warning(`Game ${i + 1}: "${c.map}" isn't an ODST mission or Firefight map, which the first server plays`);
+    if (odst && game && !ODST_GAMES.has(game)) warning(`Game ${i + 1}: "${c.game}" isn't a Firefight game type`);
+    if (odst && game && ODST_MISSIONS.has(map)) warning(`Game ${i + 1}: ${c.map} is a mission, which takes no game type`);
+    const key = `${map}|${game}`;
     if (seen.has(key)) warning(`Game ${i + 1} repeats an earlier map and game type`);
     seen.add(key);
   });
@@ -29,16 +43,13 @@ export function validateNextVote(data, dedicated) {
     warning(`Games per vote (${perVote}) is more than the list has: every vote offers all ${choices.length}`);
   }
 
-  const first = dedicated?.server?.[0];
   if (dedicated && !first?.rcon_password && !dedicated.rcon?.password) {
     warning('The vote works through RCON: set an RCON password in dedicated.toml, or the egg\'s RCON Password variable');
   }
-  // From 0.9.19 an ODST server refuses nextmap, and the egg won't start a vote on one.
-  if (first?.odst) warning('The first server plays Halo 3: ODST, whose game the console can\'t change: the vote won\'t start on it');
   return issues;
 }
 
-/** What players read for a game: its name, else "<game> on <map>" as the egg writes it. */
+/** What players read for a game: its name, else "<game> on <map>" (or the map alone) as the egg writes it. */
 export function choiceLabel(c) {
-  return String(c.name || '').trim() || `${c.game} on ${c.map}`;
+  return String(c.name || '').trim() || (c.game ? `${c.game} on ${c.map}` : String(c.map));
 }
